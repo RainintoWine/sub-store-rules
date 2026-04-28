@@ -5,7 +5,7 @@
 // ==========================================
 // ⚙️ 用户配置区 
 // ==========================================
-// 1. 质量标签映射：H -> 🚋 (极速/专线)，L -> 🚕 (普通/兜底)
+// 1. 质量标签映射：H -> 🚋 (绿色有轨电车/优质)，L -> 🚕 (黄色出租车/普通)
 const rawTag = typeof $arguments !== 'undefined' && $arguments.tag !== undefined ? decodeURI($arguments.tag).toUpperCase() : "H";
 const tagMap = { 
     "H": "🚋", 
