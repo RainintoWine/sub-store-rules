@@ -6,11 +6,10 @@
 // ==========================================
 // ⚙️ 用户配置区 
 // ==========================================
-// 1. 质量标签映射：兼容 A/H -> 🅰️，P/L -> 🅿️
+// 1. 质量标签映射
 const rawTag = typeof $arguments !== 'undefined' && $arguments.tag !== undefined ? decodeURI($arguments.tag).toUpperCase() : "H";
 const tagMap = { 
-    "H": "🅰️", "A": "🅰️", 
-    "L": "🅿️", "P": "🅿️" 
+    "H": "📈", "A": "📉", 
 };
 // 如果输入的不在字典里，则保持原样输出
 const QUALITY_TAG = tagMap[rawTag] || rawTag;
