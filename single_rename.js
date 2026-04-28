@@ -2,13 +2,15 @@
  * 极简无损节点打标与重命名脚本 (The Ultimate Fusion Edition)
  * 核心工作流：参数映射 -> 测源名推断 -> 矩阵提货 -> 彻底去旗 -> 无损拼装
  */
-
 // ==========================================
 // ⚙️ 用户配置区 
 // ==========================================
-// 1. 质量标签映射
+// 1. 质量标签映射：H -> 🚄 (极速/专线)，L -> 🚕 (普通/兜底)
 const rawTag = typeof $arguments !== 'undefined' && $arguments.tag !== undefined ? decodeURI($arguments.tag).toUpperCase() : "H";
-const tagMap = { "H": "📈", "A": "📈", "L": "📉", "P": "📉" };
+const tagMap = { 
+    "H": "🚄", 
+    "L": "🚕" 
+};
 // 如果输入的不在字典里，则保持原样输出
 const QUALITY_TAG = tagMap[rawTag] || rawTag;
 
