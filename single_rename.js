@@ -6,13 +6,17 @@
 // ==========================================
 // ⚙️ 用户配置区 
 // ==========================================
-// 1. 质量标签映射：输入 H 或 L，自动转换为 Emoji（支持 Sub-Store 传参 #tag=H&name=机场）
+// 1. 质量标签映射：兼容 A/H -> 🅰️，P/L -> 🅿️
 const rawTag = typeof $arguments !== 'undefined' && $arguments.tag !== undefined ? decodeURI($arguments.tag).toUpperCase() : "H";
-const tagMap = { "H": "🅗", "L": "🅛" };
+const tagMap = { 
+    "H": "🅰️", "A": "🅰️", 
+    "L": "🅿️", "P": "🅿️" 
+};
+// 如果输入的不在字典里，则保持原样输出
 const QUALITY_TAG = tagMap[rawTag] || rawTag;
 
 // 2. 机场名称后缀
-const AIRPORT_NAME = typeof $arguments !== 'undefined' && $arguments.name !== undefined ? decodeURI($arguments.name) : "机场名"; 
+const AIRPORT_NAME = typeof $arguments !== 'undefined' && $arguments.name !== undefined ? decodeURI($arguments.name) : "机场名";
 
 // ==========================================
 // 📦 核心一：148国对齐矩阵 (底层数据库)
