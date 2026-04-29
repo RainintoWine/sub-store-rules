@@ -18,8 +18,8 @@ const QUALITY_TAG = tagMap[rawTag] || rawTag;
 // 2. 机场名称后缀
 const AIRPORT_NAME = typeof $arguments !== 'undefined' && $arguments.name !== undefined ? decodeURI($arguments.name) : "机场名";
 
-// 3. 低倍率/白嫖节点识别正则 (已修复：彻底解决 1.0x, 2.0x, 10.1x, 10% 等误伤Bug)
-const regexLowRate = /(?:(?<!\d)0\.\d+|(?<![\d\.])(?:0x|x0)|(?<!\d)0%|试用|免费|低倍|test|trial|beta|实验|省流)/i;
+// 3. 极简哲学版：低倍率/白嫖节点识别
+const regexLowRate = /(?:0\.[0-8]|低倍率|省流|实验性|免费|test|beta)/i;
 
 // ==========================================
 // 📦 核心一：148国对齐矩阵 (底层数据库)
