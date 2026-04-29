@@ -27,8 +27,9 @@ const nameclear = /(?:过滤.*?\d+.*?条|群|交流|公告|反馈|频道|通知|
 // ==========================================
 function operator(proxies) {
     return proxies.filter(p => {
-        // 【新增防御】：绝对死刑！只要带有“剩余”或“流量”，管你有没有GB，直接清除
-        if (/(?:剩余|流量)/i.test(p.name)) {
+        // 【特判防御】：专门拦截依靠 GB 强行保命的流量提示节点
+        // 只有同时带 GB 且带 剩余|流量，才直接物理超度
+        if (/GB/i.test(p.name) && /(?:剩余|流量)/i.test(p.name)) {
             return false;
         }
 
