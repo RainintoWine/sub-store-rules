@@ -1,6 +1,6 @@
 /**
  * 极简无损节点打标与重命名脚本 (The Ultimate Fusion Edition)
- * 核心工作流：参数映射 -> 测源名推断 -> 矩阵提货 -> 彻底去旗 -> 无损拼装
+ * 核心工作流：参数映射 -> 测源名推断 -> 矩阵提货 -> 彻底去旗 -> 倍率判定 -> 无损拼装
  */
 
 // ==========================================
@@ -17,6 +17,9 @@ const QUALITY_TAG = tagMap[rawTag] || rawTag;
 
 // 2. 机场名称后缀
 const AIRPORT_NAME = typeof $arguments !== 'undefined' && $arguments.name !== undefined ? decodeURI($arguments.name) : "机场名";
+
+// 3. 低倍率/白嫖节点识别正则 (命中即强制降级为低质量)
+const regexLowRate = /(?:0\.\d+|x0|0x|0%|试用|免费|低倍|test|trial|beta|实验|省流)/i;
 
 // ==========================================
 // 📦 核心一：148国对齐矩阵 (底层数据库)
@@ -102,8 +105,14 @@ function operator(proxies) {
         // 【第三步】用手术刀物理剥离原名中所有的旧国旗，得到无损底板
         let pureName = p.name.replace(flagRegex, '').trim();
 
-        // 【第四步】无损拼装
-        let prefix = QUALITY_TAG ? `${QUALITY_TAG} ` : "";
+        // 【第四步】无损拼装 (含低倍率强制降级逻辑)
+        let currentQualityTag = QUALITY_TAG;
+        // 如果原始名称命中低倍率正则，无视传参，强制赋予低质量标签
+        if (regexLowRate.test(p.name)) {
+            currentQualityTag = tagMap["L"]; 
+        }
+
+        let prefix = currentQualityTag ? `${currentQualityTag} ` : "";
         let suffix = AIRPORT_NAME ? `-${AIRPORT_NAME}` : "";
 
         // 终极输出赋值
