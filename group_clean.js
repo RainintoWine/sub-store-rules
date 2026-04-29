@@ -27,6 +27,11 @@ const nameclear = /(?:过滤.*?\d+.*?条|群|交流|公告|反馈|频道|通知|
 // ==========================================
 function operator(proxies) {
     return proxies.filter(p => {
+        // 【新增防御】：绝对死刑！只要带有“剩余”或“流量”，管你有没有GB，直接清除
+        if (/(?:剩余|流量)/i.test(p.name)) {
+            return false;
+        }
+
         // 为了提高匹配效率和准确率，统一转换为大写进行白名单对比
         const upperName = p.name.toUpperCase();
         
