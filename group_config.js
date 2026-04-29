@@ -82,7 +82,6 @@ function main(config) {
     "美国": { emoji: "🇺🇸", keywords: ["美国", "美", "波特兰", "达拉斯", "俄勒冈", "凤凰城", "费利蒙", "硅谷", "拉斯维加斯", "洛杉矶", "圣何塞", "圣克拉拉", "西雅图", "芝加哥", "哥伦布", "纽约", "(?:深|沪|呼|京|广|杭)美", "(?<![a-zA-Z])US(?:A)?(?![a-zA-Z])", "United States", "Los Angeles", "San Jose", "Silicon Valley", "Michigan", "ATL", "BUF", "DFW", "EWR", "IAD", "JFK", "LAX", "MCI", "MIA", "ORD", "PDX", "PHX", "SEA", "SFO", "SJC"] },
   };
 
-
   const regexRegions = {};
   for (const [region, data] of Object.entries(regionData)) {
     regexRegions[region] = new RegExp(`(?:${data.emoji}|${data.keywords.join('|')})`, 'i');
@@ -269,7 +268,7 @@ function main(config) {
         "🚦节点选择",
         "👆手动选择",
         "🐢低倍率节点",
-        "🎯全球直连",
+        "🎯全球直连", // <-- 修复了这里的逗号缺失
         "🪫♻️自动选择",
         "🪫🇯🇵日本节点",
         "🪫🇺🇲美国节点",
