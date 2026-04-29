@@ -94,7 +94,7 @@ function main(config) {
   // ============================================================================
   // 3. 策略组装 (竖排易编辑排版)
   // ============================================================================
-  const baseUT = { type: "url-test", interval: 200, lazy: true, url: "https://www.google.com/generate_204", hidden: false };
+  const baseUT = { type: "url-test", interval: 200, lazy: true, url: "https://www.google.com/generate_204", hidden: true };
   const baseFB = { type: "fallback", interval: 200, lazy: true, url: "https://www.google.com/generate_204", hidden: true };
 
   config["proxy-groups"] = [
