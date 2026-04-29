@@ -19,7 +19,7 @@ const QUALITY_TAG = tagMap[rawTag] || rawTag;
 const AIRPORT_NAME = typeof $arguments !== 'undefined' && $arguments.name !== undefined ? decodeURI($arguments.name) : "机场名";
 
 // 3. 极简哲学版：低倍率/白嫖节点识别
-const regexLowRate = /(?:0\.[0-8]|低倍率|省流|实验性|免费|test|beta)/i;
+const regexLowRate = /(?:0\.[1-8](?:[xX]|倍)|[xX]0\.[1-8]|低倍率|省流|实验性|免费|test|beta)/i;
 
 // ==========================================
 // 📦 核心一：148国对齐矩阵 (底层数据库)
