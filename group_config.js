@@ -82,8 +82,8 @@ function main(config) {
   // ============================================================================
   // 3. 策略组装 (竖排易编辑排版)
   // ============================================================================
-  const baseUT = { type: "url-test", interval: 200, lazy: true, url: "https://www.google.com/generate_204", hidden: true };
-  const baseFB = { type: "fallback", interval: 200, lazy: true, url: "https://www.google.com/generate_204", hidden: true };
+  const baseUT = { type: "url-test", interval: 300, tolerance: 50, timeout: 2000, "expected-status": "204", lazy: false, url: "https://www.google.com/generate_204", hidden: true };
+  const baseFB = { type: "fallback", interval: 300, timeout: 2000, "expected-status": "204", lazy: true, url: "https://www.google.com/generate_204", hidden: false };
 
   config["proxy-groups"] = [
     {
@@ -187,7 +187,8 @@ function main(config) {
         "🐢低倍率节点",
         "🎯全球直连"
       ],
-      "include-all": true
+      "include-all": true,
+      "exclude-filter": `(?i)${regexRegions["香港"].source}`
     },
     {
       name: "🇬谷歌服务",
@@ -256,7 +257,7 @@ function main(config) {
         "🚦节点选择",
         "👆手动选择",
         "🐢低倍率节点",
-        "🎯全球直连", // <-- 修复了这里的逗号缺失
+        "🎯全球直连", 
         "🪫♻️自动选择",
         "🪫🇯🇵日本节点",
         "🪫🇺🇲美国节点",
@@ -549,10 +550,12 @@ function main(config) {
       "include-all": true,
       filter: `(?i)${regexLowRate.source}`
     },
-
+    
+    Object.assign({}, baseFB, { name: "🔋🛟故障转移", proxies: ["🔋🇯🇵日本节点", "🔋🇹🇼台湾节点", "🔋🇺🇲美国节点", "🔋🇭🇰香港节点", "🔋🇰🇷韩国节点", "🔋🇸🇬新加坡节点","🔋🧊冷门节点",] }),
+    Object.assign({}, baseFB, { name: "🪫🛟故障转移", proxies: ["🪫🇯🇵日本节点", "🪫🇹🇼台湾节点", "🪫🇺🇲美国节点", "🪫🇭🇰香港节点", "🪫🇰🇷韩国节点", "🪫🇸🇬新加坡节点","🪫🧊冷门节点",] }),
     // --- 自动测速池 ---
     Object.assign({}, baseUT, { name: "🔋♻️自动选择", "include-all": true, filter: `^(?=.*${regexHighQuality.source})(?!.*${regexLowRate.source}).*$` }),
-    Object.assign({}, baseFB, { name: "🔋🛟故障转移", "include-all": true, filter: `^(?=.*${regexHighQuality.source})(?!.*${regexLowRate.source}).*$` }),
+    //Object.assign({}, baseFB, { name: "🔋🛟故障转移", "include-all": true, filter: `^(?=.*${regexHighQuality.source})(?!.*${regexLowRate.source}).*$` }),
     Object.assign({}, baseUT, { name: "🔋🇭🇰香港节点", "include-all": true, filter: `^(?=.*${regexHighQuality.source})(?=.*${regexRegions["香港"].source})(?!.*${regexLowRate.source}).*$` }),
     Object.assign({}, baseUT, { name: "🔋🇹🇼台湾节点", "include-all": true, filter: `^(?=.*${regexHighQuality.source})(?=.*${regexRegions["台湾"].source})(?!.*${regexLowRate.source}).*$` }),
     Object.assign({}, baseUT, { name: "🔋🇯🇵日本节点", "include-all": true, filter: `^(?=.*${regexHighQuality.source})(?=.*${regexRegions["日本"].source})(?!.*${regexLowRate.source}).*$` }),
@@ -561,7 +564,7 @@ function main(config) {
     Object.assign({}, baseUT, { name: "🔋🇰🇷韩国节点", "include-all": true, filter: `^(?=.*${regexHighQuality.source})(?=.*${regexRegions["韩国"].source})(?!.*${regexLowRate.source}).*$` }),
 
     Object.assign({}, baseUT, { name: "🪫♻️自动选择", "include-all": true, filter: `^(?=.*${regexLowQuality.source}).*$` }),
-    Object.assign({}, baseFB, { name: "🪫🛟故障转移", "include-all": true, filter: `^(?=.*${regexLowQuality.source}).*$` }),
+    //Object.assign({}, baseFB, { name: "🪫🛟故障转移", "include-all": true, filter: `^(?=.*${regexLowQuality.source}).*$` }),
     Object.assign({}, baseUT, { name: "🪫🇭🇰香港节点", "include-all": true, filter: `^(?=.*${regexLowQuality.source})(?=.*${regexRegions["香港"].source}).*$` }),
     Object.assign({}, baseUT, { name: "🪫🇹🇼台湾节点", "include-all": true, filter: `^(?=.*${regexLowQuality.source})(?=.*${regexRegions["台湾"].source}).*$` }),
     Object.assign({}, baseUT, { name: "🪫🇯🇵日本节点", "include-all": true, filter: `^(?=.*${regexLowQuality.source})(?=.*${regexRegions["日本"].source}).*$` }),
