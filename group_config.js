@@ -158,7 +158,8 @@ function main(config) {
         "🪫🇰🇷韩国节点",
         "🪫🧊冷门节点",
       ],
-      "include-all": true
+      "include-all": true,
+      "exclude-filter": `(?i)${regexRegions["香港"].source}`
     },
     {
       name: "🪙Crypto",
@@ -188,7 +189,6 @@ function main(config) {
         "🎯全球直连"
       ],
       "include-all": true,
-      "exclude-filter": `(?i)${regexRegions["香港"].source}`
     },
     {
       name: "🇬谷歌服务",
