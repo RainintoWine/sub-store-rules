@@ -188,7 +188,7 @@ function main(config) {
         "🐢低倍率节点",
         "🎯全球直连"
       ],
-      "include-all": true,
+      "include-all": true
     },
     {
       name: "🇬谷歌服务",
