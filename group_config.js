@@ -25,7 +25,7 @@ function main(config) {
     "override-destination": false,
     "sniff": {
       "HTTP": { "ports": [80, "8080-8880"], "override-destination": true },
-      "TLS": { "ports": [443, 8443] },
+      "TLS": { "ports": [443, 8443], "override-destination": true },
       "QUIC": { "ports": [443, 8443] }
     },
     "skip-domain": ["Mijia Cloud", "dlg.io.mi.com", "+.push.apple.com"]
