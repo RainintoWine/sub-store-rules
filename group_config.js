@@ -2,22 +2,18 @@ function main(config) {
   // ============================================================================
   // 1. 核心系统参数注入
   // ============================================================================
-  config["mode"] = "rule";
-  config["bind-address"] = "*";
-  config["mixed-port"] = 7890;
+  config["port"] = 7890;
+  config["socks-port"] = 7891;
+  config["redir-port"] = 7892;
+  config["mixed-port"] = 7893;
   config["allow-lan"] = true;
-  config["ipv6"] = false;
-  config["log-level"] = "info";
+  config["bind-address"] = "*";
   config["unified-delay"] = true;
-  config["tcp-concurrent"] = true;
+  config["mode"] = "rule";
+  config["log-level"] = "info";
+  config["ipv6"] = false;
+  config["tcp-concurrent"] = false;
   config["external-controller"] = "127.0.0.1:9090";
-  config["keep-alive-interval"] = 15;
-  config["keep-alive-idle"] = 600;
-
-  config["profile"] = {
-    "store-selected": true,
-    "store-fake-ip": true
-  };
 
   config["experimental"] = {
     "ignore-resolve-fail": true,
@@ -26,21 +22,13 @@ function main(config) {
 
   config["sniffer"] = {
     "enable": true,
-    "override-destination": true,
+    "override-destination": false,
     "sniff": {
       "HTTP": { "ports": [80, "8080-8880"], "override-destination": true },
       "TLS": { "ports": [443, 8443] },
       "QUIC": { "ports": [443, 8443] }
     },
     "skip-domain": ["Mijia Cloud", "dlg.io.mi.com", "+.push.apple.com"]
-  };
-
-  config["tun"] = {
-    "enable": false,
-    "stack": "mixed",
-    "dns-hijack": ["any:53", "tcp://any:53"],
-    "auto-route": true,
-    "auto-detect-interface": true
   };
 
   config["dns"] = {
@@ -61,8 +49,8 @@ function main(config) {
     "direct-nameserver": ["https://dns.alidns.com/dns-query", "https://doh.pub/dns-query"],
     "direct-nameserver-follow-policy": true,
     "fake-ip-filter": [
-      "rule-set:Direct", "rule-set:Private", "rule-set:China",
-      "+.miwifi.com", "+.docker.io", "+.market.xiaomi.com", "+.push.apple.com"
+      "rule-set:Direct","rule-set:Private","rule-set:China",
+      "+.miwifi.com","+.docker.io","+.market.xiaomi.com","+.push.apple.com","+.stun.*","stun.*.*"
     ]
   };
 
@@ -634,7 +622,7 @@ function main(config) {
   config["rules"] = [
     "RULE-SET,Tracking,🍃应用净化",
     "RULE-SET,Advertising,🍃应用净化",
-    "AND,((DST-PORT,443),(NETWORK,UDP),(NOT,((GEOIP,CN)))),🍃应用净化",
+    //"AND,((DST-PORT,443),(NETWORK,UDP),(NOT,((GEOIP,CN)))),🍃应用净化",
 
     "RULE-SET,Private,🎯全球直连",
     "RULE-SET,Direct,🎯全球直连",
