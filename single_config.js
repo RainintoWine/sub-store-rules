@@ -57,7 +57,7 @@ function main(config) {
   // ============================================================================
   // 2. 高性能正则匹配引擎
   // ============================================================================
-  const regexLowRate = /(?:0\.[1-8](?:[xX]|倍)|[xX]0\.[1-8]|低倍率|省流|实验性|免费|test|beta)/i;
+  const regexLowRate = /(?:0\.[1-8](?:[xX]|倍)|[xX]0\.[1-8]|低倍率|省流|实验性|免费|test|beta)/iu;
 
   const regionData = {
     "香港": { emoji: "🇭🇰", keywords: ["香港", "港", "(?:深|沪|呼|京|广|杭)港", "(?<![a-zA-Z])HK(?![a-zA-Z])", "Hong(?:Kong)?", "HKG"] },
@@ -70,12 +70,12 @@ function main(config) {
 
   const regexRegions = {};
   for (const [region, data] of Object.entries(regionData)) {
-    regexRegions[region] = new RegExp(`(?:${data.emoji}|${data.keywords.join('|')})`, 'i');
+    regexRegions[region] = new RegExp(`(?:${data.emoji}|${data.keywords.join('|')})`, 'iu');
   }
 
   const allEmojis = Object.values(regionData).map(d => d.emoji);
   const allKeywords = Object.values(regionData).flatMap(d => d.keywords);
-  const regexMainRegions = new RegExp(`(?:${allEmojis.join('|')}|${allKeywords.join('|')})`, 'i');
+  const regexMainRegions = new RegExp(`(?:${allEmojis.join('|')}|${allKeywords.join('|')})`, 'iu');
 
   // ============================================================================
   // 3. 策略组装 (竖排易编辑排版)
@@ -91,7 +91,7 @@ function main(config) {
         "♻️自动选择",
         "🛟故障转移",
         "🇯🇵日本节点",
-        "🇺🇲美国节点",
+        "🇺🇸美国节点",
         "🇭🇰香港节点",
         "🇹🇼台湾节点",
         "🇸🇬新加坡节点",
@@ -107,7 +107,7 @@ function main(config) {
       type: "select",
       proxies: [
         "🇯🇵日本节点",
-        "🇺🇲美国节点",
+        "🇺🇸美国节点",
         "🇭🇰香港节点",
         "🇹🇼台湾节点",
         "🇸🇬新加坡节点",
@@ -121,7 +121,7 @@ function main(config) {
       name: "🤖人工智能",
       type: "select",
       proxies: [
-        "🇺🇲美国节点",
+        "🇺🇸美国节点",
         "🚦节点选择",
         "👆手动选择",
         "♻️自动选择",
@@ -144,7 +144,7 @@ function main(config) {
         "♻️自动选择",
         "🛟故障转移",
         "🇯🇵日本节点",
-        "🇺🇲美国节点",
+        "🇺🇸美国节点",
         "🇭🇰香港节点",
         "🇹🇼台湾节点",
         "🇸🇬新加坡节点",
@@ -165,7 +165,7 @@ function main(config) {
         "♻️自动选择",
         "🛟故障转移",
         "🇯🇵日本节点",
-        "🇺🇲美国节点",
+        "🇺🇸美国节点",
         "🇭🇰香港节点",
         "🇹🇼台湾节点",
         "🇸🇬新加坡节点",
@@ -186,7 +186,7 @@ function main(config) {
         "♻️自动选择",
         "🛟故障转移",
         "🇯🇵日本节点",
-        "🇺🇲美国节点",
+        "🇺🇸美国节点",
         "🇭🇰香港节点",
         "🇹🇼台湾节点",
         "🇸🇬新加坡节点",
@@ -206,7 +206,7 @@ function main(config) {
         "🎯全球直连", 
         "♻️自动选择",
         "🇯🇵日本节点",
-        "🇺🇲美国节点",
+        "🇺🇸美国节点",
         "🇭🇰香港节点",
         "🇹🇼台湾节点",
         "🇸🇬新加坡节点",
@@ -224,7 +224,7 @@ function main(config) {
         "🐢低倍率节点",
         "♻️自动选择",
         "🇯🇵日本节点",
-        "🇺🇲美国节点",
+        "🇺🇸美国节点",
         "🇭🇰香港节点",
         "🇹🇼台湾节点",
         "🇸🇬新加坡节点",
@@ -241,7 +241,7 @@ function main(config) {
         "👆手动选择",
         "🛟故障转移",
         "🇯🇵日本节点",
-        "🇺🇲美国节点",
+        "🇺🇸美国节点",
         "🇭🇰香港节点",
         "🇹🇼台湾节点",
         "🇸🇬新加坡节点",
@@ -259,7 +259,7 @@ function main(config) {
         "👆手动选择",
         "🛟故障转移",
         "🇯🇵日本节点",
-        "🇺🇲美国节点",
+        "🇺🇸美国节点",
         "🇭🇰香港节点",
         "🇹🇼台湾节点",
         "🇸🇬新加坡节点",
@@ -278,7 +278,7 @@ function main(config) {
         "🐢低倍率节点",
         "♻️自动选择",
         "🇯🇵日本节点",
-        "🇺🇲美国节点",
+        "🇺🇸美国节点",
         "🇭🇰香港节点",
         "🇹🇼台湾节点",
         "🇸🇬新加坡节点",
@@ -296,7 +296,7 @@ function main(config) {
         "🐢低倍率节点",
         "♻️自动选择",
         "🇯🇵日本节点",
-        "🇺🇲美国节点",
+        "🇺🇸美国节点",
         "🇭🇰香港节点",
         "🇹🇼台湾节点",
         "🇸🇬新加坡节点",
@@ -314,7 +314,7 @@ function main(config) {
         "♻️自动选择",
         "🛟故障转移",
         "🇯🇵日本节点",
-        "🇺🇲美国节点",
+        "🇺🇸美国节点",
         "🇭🇰香港节点",
         "🇹🇼台湾节点",
         "🇸🇬新加坡节点",
@@ -333,7 +333,7 @@ function main(config) {
         "♻️自动选择",
         "🛟故障转移",
         "🇯🇵日本节点",
-        "🇺🇲美国节点",
+        "🇺🇸美国节点",
         "🇭🇰香港节点",
         "🇹🇼台湾节点",
         "🇸🇬新加坡节点",
@@ -351,7 +351,7 @@ function main(config) {
         "♻️自动选择",
         "🛟故障转移",
         "🇯🇵日本节点",
-        "🇺🇲美国节点",
+        "🇺🇸美国节点",
         "🇭🇰香港节点",
         "🇹🇼台湾节点",
         "🇸🇬新加坡节点",
@@ -370,7 +370,7 @@ function main(config) {
         "♻️自动选择",
         "🛟故障转移",
         "🇯🇵日本节点",
-        "🇺🇲美国节点",
+        "🇺🇸美国节点",
         "🇭🇰香港节点",
         "🇹🇼台湾节点",
         "🇸🇬新加坡节点",
@@ -402,14 +402,14 @@ function main(config) {
       filter: `(?i)${regexLowRate.source}`
     },
     
-    Object.assign({}, baseFB, { name: "🛟故障转移", proxies: ["🇯🇵日本节点", "🇹🇼台湾节点", "🇺🇲美国节点", "🇭🇰香港节点", "🇰🇷韩国节点", "🇸🇬新加坡节点","🧊冷门节点",] }),
+    Object.assign({}, baseFB, { name: "🛟故障转移", proxies: ["🇯🇵日本节点", "🇹🇼台湾节点", "🇺🇸美国节点", "🇭🇰香港节点", "🇰🇷韩国节点", "🇸🇬新加坡节点","🧊冷门节点",] }),
 
     // --- 自动测速池 ---
     Object.assign({}, baseUT, { name: "♻️自动选择", "include-all": true, filter: `^(?!.*${regexLowRate.source}).*$` }),
     Object.assign({}, baseUT, { name: "🇭🇰香港节点", "include-all": true, filter: `^(?=.*${regexRegions["香港"].source})(?!.*${regexLowRate.source}).*$` }),
     Object.assign({}, baseUT, { name: "🇹🇼台湾节点", "include-all": true, filter: `^(?=.*${regexRegions["台湾"].source})(?!.*${regexLowRate.source}).*$` }),
     Object.assign({}, baseUT, { name: "🇯🇵日本节点", "include-all": true, filter: `^(?=.*${regexRegions["日本"].source})(?!.*${regexLowRate.source}).*$` }),
-    Object.assign({}, baseUT, { name: "🇺🇲美国节点", "include-all": true, filter: `^(?=.*${regexRegions["美国"].source})(?!.*${regexLowRate.source}).*$` }),
+    Object.assign({}, baseUT, { name: "🇺🇸美国节点", "include-all": true, filter: `^(?=.*${regexRegions["美国"].source})(?!.*${regexLowRate.source}).*$` }),
     Object.assign({}, baseUT, { name: "🇸🇬新加坡节点", "include-all": true, filter: `^(?=.*${regexRegions["新加坡"].source})(?!.*${regexLowRate.source}).*$` }),
     Object.assign({}, baseUT, { name: "🇰🇷韩国节点", "include-all": true, filter: `^(?=.*${regexRegions["韩国"].source})(?!.*${regexLowRate.source}).*$` }),
   ];
