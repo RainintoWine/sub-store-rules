@@ -57,7 +57,7 @@ function main(config) {
   // ============================================================================
   // 2. 高性能正则匹配引擎
   // ============================================================================
-  const regexLowRate = /(?:0\.[1-8](?:[xX]|倍)|[xX]0\.[1-8]|低倍率|省流|实验性|免费|test|beta)/i;
+  const regexLowRate = /(?:0\.[1-8](?:[xX]|倍)|[xX]0\.[1-8]|低倍率|省流|实验性|免费|test|beta)/iu;
   const regexHighQuality = /🔋/;
   const regexLowQuality = /🪫/;
 
@@ -72,12 +72,12 @@ function main(config) {
 
   const regexRegions = {};
   for (const [region, data] of Object.entries(regionData)) {
-    regexRegions[region] = new RegExp(`(?:${data.emoji}|${data.keywords.join('|')})`, 'i');
+    regexRegions[region] = new RegExp(`(?:${data.emoji}|${data.keywords.join('|')})`, 'iu');
   }
 
   const allEmojis = Object.values(regionData).map(d => d.emoji);
   const allKeywords = Object.values(regionData).flatMap(d => d.keywords);
-  const regexMainRegions = new RegExp(`(?:${allEmojis.join('|')}|${allKeywords.join('|')})`, 'i');
+  const regexMainRegions = new RegExp(`(?:${allEmojis.join('|')}|${allKeywords.join('|')})`, 'iu');
 
   // ============================================================================
   // 3. 策略组装 (竖排易编辑排版)
