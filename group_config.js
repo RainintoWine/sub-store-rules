@@ -83,7 +83,7 @@ function main(config) {
   // 3. 策略组装 (竖排易编辑排版)
   // ============================================================================
   const baseUT = { type: "url-test", interval: 300, tolerance: 50, timeout: 2000, "expected-status": "204", lazy: false, url: "https://www.google.com/generate_204", hidden: true };
-  const baseFB = { type: "fallback", interval: 300, timeout: 2000, "expected-status": "204", lazy: true, url: "https://www.google.com/generate_204", hidden: false };
+  const baseFB = { type: "fallback", interval: 300, timeout: 2000, "expected-status": "204", lazy: false, url: "https://www.google.com/generate_204", hidden: false };
 
   config["proxy-groups"] = [
     {
