@@ -82,6 +82,9 @@ const rurekey = {
 function operator(proxies) {
     // 匹配所有由两个区域指示符字母构成的 Emoji 国旗
     const flagRegex = /[\uD83C][\uDDE6-\uDDFF][\uD83C][\uDDE6-\uDDFF]/g;
+    
+    // 【新增】用于记录节点名称出现次数的查重字典
+    const nameTracker = {};
 
     return proxies.map(p => {
         // 【第一步】先用原始未处理的名字推断国家（保留对纯国旗节点的识别能力）
