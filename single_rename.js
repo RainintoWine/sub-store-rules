@@ -115,8 +115,16 @@ function operator(proxies) {
         let prefix = currentQualityTag ? `${currentQualityTag} ` : "";
         let suffix = AIRPORT_NAME ? `-${AIRPORT_NAME}` : "";
 
-        // 终极输出赋值
-        p.name = `${prefix}${finalFlag}${pureName}${suffix}`;
+        // 【新增】终极输出赋值与自动去重逻辑
+        let baseName = `${prefix}${finalFlag}${pureName}${suffix}`;
+        
+        if (nameTracker[baseName] === undefined) {
+            nameTracker[baseName] = 0;
+            p.name = baseName;
+        } else {
+            nameTracker[baseName]++;
+            p.name = `${baseName}-${nameTracker[baseName]}`;
+        }
 
         return p;
     });
