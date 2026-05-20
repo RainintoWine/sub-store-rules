@@ -108,11 +108,18 @@ function operator(proxies) {
         // 【第三步】用手术刀物理剥离原名中所有的旧国旗，得到无损底板
         let pureName = p.name.replace(flagRegex, '').trim();
 
-        // 【第四步】无损拼装 (含低倍率强制降级逻辑)
+        // 【第四步】无损拼装 (含低倍率强制降级逻辑与自定义强制打标)
         let currentQualityTag = QUALITY_TAG;
         // 如果原始名称命中低倍率正则，无视传参，强制赋予低质量标签
         if (regexLowRate.test(p.name)) {
             currentQualityTag = tagMap["L"]; 
+        }
+        
+        // 【新增覆盖逻辑】如果命中用户输入的强制关键字，则直接强制覆盖为 H 或 L
+        if (FORCE_H && p.name.includes(FORCE_H)) {
+            currentQualityTag = tagMap["H"];
+        } else if (FORCE_L && p.name.includes(FORCE_L)) {
+            currentQualityTag = tagMap["L"];
         }
 
         let prefix = currentQualityTag ? `${currentQualityTag} ` : "";
