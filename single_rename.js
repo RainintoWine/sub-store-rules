@@ -67,6 +67,7 @@ const rurekey = {
     "孟加拉国": /孟加拉(?:国)?|BD|Bangladesh|🇧🇩/i,
 
     // 扩充的 11 个地区
+    "阿根廷": /阿根廷|(?<![a-zA-Z])AR(?:G)?(?![a-zA-Z])|Argentina|BUE|EZE|🇦🇷/i, 
     "澳门": /澳门|(?<![a-zA-Z])MO(?![a-zA-Z])|Macau|MFM|🇲🇴/i,
     "越南": /越南|(?<![a-zA-Z])VN(?![a-zA-Z])|Vietnam|SGN|HAN|🇻🇳/i,
     "加拿大": /加拿大|(?<![a-zA-Z])CA(?![a-zA-Z])|Canada|YVR|YYZ|🇨🇦/i,
