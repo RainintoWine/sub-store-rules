@@ -21,6 +21,10 @@ const AIRPORT_NAME = typeof $arguments !== 'undefined' && $arguments.name !== un
 // 3. 极简哲学版：低倍率/白嫖节点识别
 const regexLowRate = /(?:0\.[0-8](?:[xX]|倍)|[xX]0\.[0-8]|低倍率|省流|实验性|免费|test|beta)/i;
 
+// 4. 【新增】自定义关键字强制标记规则
+const FORCE_H = typeof $arguments !== 'undefined' && $arguments.forceH !== undefined ? decodeURI($arguments.forceH) : "";
+const FORCE_L = typeof $arguments !== 'undefined' && $arguments.forceL !== undefined ? decodeURI($arguments.forceL) : "";
+
 // ==========================================
 // 📦 核心一：148国对齐矩阵 (底层数据库)
 // ==========================================
