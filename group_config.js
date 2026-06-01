@@ -80,160 +80,504 @@ function main(config) {
   const regexMainRegions = new RegExp(`(?:${allEmojis.join('|')}|${allKeywords.join('|')})`, 'iu');
 
   // ============================================================================
-  // 3. 策略组装 (动态探测与净化引擎)
+  // 3. 策略组装 (竖排易编辑排版)
   // ============================================================================
-  // 【优化】彻底废弃 fallback，使用关闭了 lazy 的真连通测试作为唯一自动调度核心
   const baseUT = { 
     type: "url-test", 
-    interval: 120, 
-    tolerance: 30, 
-    timeout: 2000, 
-    lazy: false,  // 关键：关闭懒加载，保持测速始终敏锐
+    interval: 120, // 缩短间隔以便更敏锐地感知节点健康度变化
+    tolerance: 30, // 适当调低容差，避免卡在次优节点上
+    timeout: 3000, 
+    lazy: true, 
     url: "https://cp.cloudflare.com/generate_204", 
-    "expected-status": 204, 
+    "expected-status": 204, // 严格匹配 204 状态码
     hidden: true 
   };
-
-  // 提取当前订阅中的所有节点名，用于存活探测
-  const proxyNames = config.proxies ? config.proxies.map(p => p.name) : [];
   
-  // 核心探测函数：如果正则匹配不到任何节点，返回 false
-  function hasProxy(filterRegexSource) {
-    if (proxyNames.length === 0) return true; // 保底机制：如果全靠外部 Provider，则强制放行
-    const regex = new RegExp(filterRegexSource, 'iu');
-    return proxyNames.some(name => regex.test(name));
-  }
-
-  const generatedGroups = [];
-  // 记录所有成功生成的可用组名，"DIRECT" 和 "REJECT" 为天然可用
-  const validGroupNames = new Set(["DIRECT", "REJECT"]); 
-
-  // 辅助函数：只生成内部确实有节点的底层组
-  function addBaseGroup(groupConfig) {
-    if (hasProxy(groupConfig.filter)) {
-      validGroupNames.add(groupConfig.name);
-      generatedGroups.push(groupConfig);
-    }
-  }
-
-  // --- 3.1 动态生成底层组 (空分组直接抛弃) ---
-  addBaseGroup(Object.assign({}, baseUT, { name: "🔋♻️自动选择", "include-all": true, filter: `^(?=.*${regexHighQuality.source})(?!.*${regexLowRate.source}).*$` }));
-  addBaseGroup(Object.assign({}, baseUT, { name: "🪫♻️自动选择", "include-all": true, filter: `^(?=.*${regexLowQuality.source}).*$` }));
-
-  for (const [region, data] of Object.entries(regionData)) {
-    addBaseGroup(Object.assign({}, baseUT, { name: `🔋${data.emoji}${region}节点`, "include-all": true, filter: `^(?=.*${regexHighQuality.source})(?=.*${regexRegions[region].source})(?!.*${regexLowRate.source}).*$` }));
-    addBaseGroup(Object.assign({}, baseUT, { name: `🪫${data.emoji}${region}节点`, "include-all": true, filter: `^(?=.*${regexLowQuality.source})(?=.*${regexRegions[region].source}).*$` }));
-  }
-
-  addBaseGroup({ name: "🔋🧊冷门节点", type: "select", "include-all": true, filter: `^(?=.*${regexHighQuality.source})(?!.*${regexMainRegions.source})(?!.*${regexLowRate.source}).*$` });
-  addBaseGroup({ name: "🪫🧊冷门节点", type: "select", "include-all": true, filter: `^(?=.*${regexLowQuality.source})(?!.*${regexMainRegions.source})(?!.*${regexLowRate.source}).*$` });
-  addBaseGroup({ name: "🐢低倍率节点", type: "select", "include-all": true, filter: `(?i)${regexLowRate.source}` });
-
-  // --- 3.2 定义上层业务组 (已清理故障转移相关) ---
-  const topGroups = [
+  config["proxy-groups"] = [
     {
       name: "🚦节点选择",
       type: "select",
-      proxies: ["🔋♻️自动选择", "🔋🇯🇵日本节点", "🔋🇺🇸美国节点", "🔋🇭🇰香港节点", "🔋🇹🇼台湾节点", "🔋🇸🇬新加坡节点", "🔋🇰🇷韩国节点", "🔋🧊冷门节点", "👆手动选择", "🪫♻️自动选择", "🪫🇯🇵日本节点", "🪫🇺🇸美国节点", "🪫🇭🇰香港节点", "🪫🇹🇼台湾节点", "🪫🇸🇬新加坡节点", "🪫🇰🇷韩国节点", "🪫🧊冷门节点", "🐢低倍率节点"],
+      proxies: [
+        "🔋♻️自动选择",
+        "🔋🇯🇵日本节点",
+        "🔋🇺🇸美国节点",
+        "🔋🇭🇰香港节点",
+        "🔋🇹🇼台湾节点",
+        "🔋🇸🇬新加坡节点",
+        "🔋🇰🇷韩国节点",
+        "🔋🧊冷门节点",
+        "👆手动选择",
+        "🪫♻️自动选择",
+        "🪫🇯🇵日本节点",
+        "🪫🇺🇸美国节点",
+        "🪫🇭🇰香港节点",
+        "🪫🇹🇼台湾节点",
+        "🪫🇸🇬新加坡节点",
+        "🪫🇰🇷韩国节点",
+        "🪫🧊冷门节点",
+        "🐢低倍率节点",
+      ],
       "include-all": true
     },
     {
       name: "👆手动选择",
       type: "select",
-      proxies: ["🔋🇯🇵日本节点", "🔋🇺🇸美国节点", "🔋🇭🇰香港节点", "🔋🇹🇼台湾节点", "🔋🇸🇬新加坡节点", "🔋🇰🇷韩国节点", "🔋🧊冷门节点", "🪫🇯🇵日本节点", "🪫🇺🇸美国节点", "🪫🇭🇰香港节点", "🪫🇹🇼台湾节点", "🪫🇸🇬新加坡节点", "🪫🇰🇷韩国节点", "🪫🧊冷门节点", "🐢低倍率节点"],
+      proxies: [
+        "🔋🇯🇵日本节点",
+        "🔋🇺🇸美国节点",
+        "🔋🇭🇰香港节点",
+        "🔋🇹🇼台湾节点",
+        "🔋🇸🇬新加坡节点",
+        "🔋🇰🇷韩国节点",
+        "🔋🧊冷门节点",
+        "🪫🇯🇵日本节点",
+        "🪫🇺🇸美国节点",
+        "🪫🇭🇰香港节点",
+        "🪫🇹🇼台湾节点",
+        "🪫🇸🇬新加坡节点",
+        "🪫🇰🇷韩国节点",
+        "🪫🧊冷门节点",
+        "🐢低倍率节点"
+      ],
       "include-all": true
     },
     {
       name: "🤖人工智能",
       type: "select",
-      proxies: ["🔋🇺🇸美国节点", "🪫🇺🇸美国节点", "🚦节点选择", "👆手动选择", "🔋♻️自动选择", "🔋🇯🇵日本节点", "🔋🇹🇼台湾节点", "🔋🇸🇬新加坡节点", "🔋🇰🇷韩国节点", "🔋🧊冷门节点", "🪫♻️自动选择", "🪫🇯🇵日本节点", "🪫🇹🇼台湾节点", "🪫🇸🇬新加坡节点", "🪫🇰🇷韩国节点", "🪫🧊冷门节点"],
+      proxies: [
+        "🔋🇺🇸美国节点",
+        "🪫🇺🇸美国节点",
+        "🚦节点选择",
+        "👆手动选择",
+        "🔋♻️自动选择",
+        "🔋🇯🇵日本节点",
+        "🔋🇹🇼台湾节点",
+        "🔋🇸🇬新加坡节点",
+        "🔋🇰🇷韩国节点",
+        "🔋🧊冷门节点",
+        "🪫♻️自动选择",
+        "🪫🇯🇵日本节点",
+        "🪫🇹🇼台湾节点",
+        "🪫🇸🇬新加坡节点",
+        "🪫🇰🇷韩国节点",
+        "🪫🧊冷门节点",
+      ],
       "include-all": true,
       "exclude-filter": `(?i)${regexRegions["香港"].source}`
     },
     {
       name: "🪙Crypto",
       type: "select",
-      proxies: ["🔋🇸🇬新加坡节点", "🔋🇺🇸美国节点", "🔋🇭🇰香港节点", "🔋🇹🇼台湾节点", "🚦节点选择", "👆手动选择", "🔋🇯🇵日本节点", "🔋🇰🇷韩国节点", "🔋♻️自动选择", "🔋🧊冷门节点", "🪫♻️自动选择", "🪫🇯🇵日本节点", "🪫🇺🇸美国节点", "🪫🇭🇰香港节点", "🪫🇹🇼台湾节点", "🪫🇸🇬新加坡节点", "🪫🇰🇷韩国节点", "🪫🧊冷门节点", "🐢低倍率节点", "🎯全球直连"],
+      proxies: [
+        "🔋🇸🇬新加坡节点",
+        "🔋🇺🇸美国节点",
+        "🔋🇭🇰香港节点",
+        "🔋🇹🇼台湾节点",
+        "🚦节点选择",
+        "👆手动选择",
+        "🔋🇯🇵日本节点",
+        "🔋🇰🇷韩国节点",
+        "🔋♻️自动选择",
+        "🔋🧊冷门节点",
+        "🪫♻️自动选择",
+        "🪫🇯🇵日本节点",
+        "🪫🇺🇸美国节点",
+        "🪫🇭🇰香港节点",
+        "🪫🇹🇼台湾节点",
+        "🪫🇸🇬新加坡节点",
+        "🪫🇰🇷韩国节点",
+        "🪫🧊冷门节点",
+        "🐢低倍率节点",
+        "🎯全球直连"
+      ],
       "include-all": true
     },
     {
       name: "🇬谷歌服务",
       type: "select",
-      proxies: ["🤖人工智能", "🚦节点选择", "👆手动选择", "🔋♻️自动选择", "🔋🇯🇵日本节点", "🔋🇺🇸美国节点", "🔋🇭🇰香港节点", "🔋🇹🇼台湾节点", "🔋🇸🇬新加坡节点", "🔋🇰🇷韩国节点", "🔋🧊冷门节点", "🪫♻️自动选择", "🪫🇯🇵日本节点", "🪫🇺🇸美国节点", "🪫🇭🇰香港节点", "🪫🇹🇼台湾节点", "🪫🇸🇬新加坡节点", "🪫🇰🇷韩国节点", "🪫🧊冷门节点", "🐢低倍率节点", "🎯全球直连"]
+      proxies: [
+        "🤖人工智能",
+        "🚦节点选择",
+        "👆手动选择",
+        "🔋♻️自动选择",
+        "🔋🇯🇵日本节点",
+        "🔋🇺🇸美国节点",
+        "🔋🇭🇰香港节点",
+        "🔋🇹🇼台湾节点",
+        "🔋🇸🇬新加坡节点",
+        "🔋🇰🇷韩国节点",
+        "🔋🧊冷门节点",
+        "🪫♻️自动选择",
+        "🪫🇯🇵日本节点",
+        "🪫🇺🇸美国节点",
+        "🪫🇭🇰香港节点",
+        "🪫🇹🇼台湾节点",
+        "🪫🇸🇬新加坡节点",
+        "🪫🇰🇷韩国节点",
+        "🪫🧊冷门节点",
+        "🐢低倍率节点",
+        "🎯全球直连"
+      ]
     },
     {
       name: "Ⓜ️微软服务",
       type: "select",
-      proxies: ["🤖人工智能", "🚦节点选择", "👆手动选择", "🎯全球直连", "🔋♻️自动选择", "🔋🇯🇵日本节点", "🔋🇺🇸美国节点", "🔋🇭🇰香港节点", "🔋🇹🇼台湾节点", "🔋🇸🇬新加坡节点", "🔋🇰🇷韩国节点", "🔋🧊冷门节点", "🪫♻️自动选择", "🪫🇯🇵日本节点", "🪫🇺🇸美国节点", "🪫🇭🇰香港节点", "🪫🇹🇼台湾节点", "🪫🇸🇬新加坡节点", "🪫🇰🇷韩国节点", "🪫🧊冷门节点", "🐢低倍率节点"]
+      proxies: [
+        "🤖人工智能",
+        "🚦节点选择",
+        "👆手动选择",
+        "🎯全球直连",
+        "🔋♻️自动选择",
+        "🔋🇯🇵日本节点",
+        "🔋🇺🇸美国节点",
+        "🔋🇭🇰香港节点",
+        "🔋🇹🇼台湾节点",
+        "🔋🇸🇬新加坡节点",
+        "🔋🇰🇷韩国节点",
+        "🔋🧊冷门节点",
+        "🪫♻️自动选择",
+        "🪫🇯🇵日本节点",
+        "🪫🇺🇸美国节点",
+        "🪫🇭🇰香港节点",
+        "🪫🇹🇼台湾节点",
+        "🪫🇸🇬新加坡节点",
+        "🪫🇰🇷韩国节点",
+        "🪫🧊冷门节点",
+        "🐢低倍率节点",
+      ]
     },
     {
       name: "🎵Spotify",
       type: "select",
-      proxies: ["🪫🇺🇸美国节点", "🔋🇺🇸美国节点", "🪫♻️自动选择", "🔋♻️自动选择", "🚦节点选择", "👆手动选择", "🐢低倍率节点", "🎯全球直连", "🪫🇯🇵日本节点", "🪫🇭🇰香港节点", "🪫🇹🇼台湾节点", "🪫🇸🇬新加坡节点", "🪫🇰🇷韩国节点", "🪫🧊冷门节点", "🔋🇯🇵日本节点", "🔋🇭🇰香港节点", "🔋🇹🇼台湾节点", "🔋🇸🇬新加坡节点", "🔋🇰🇷韩国节点", "🔋🧊冷门节点"]
+      proxies: [
+        "🪫🇺🇸美国节点",
+        "🔋🇺🇸美国节点",
+        "🪫♻️自动选择",
+        "🔋♻️自动选择",
+        "🚦节点选择",
+        "👆手动选择",
+        "🐢低倍率节点",
+        "🎯全球直连", 
+        "🪫🇯🇵日本节点",
+        "🪫🇭🇰香港节点",
+        "🪫🇹🇼台湾节点",
+        "🪫🇸🇬新加坡节点",
+        "🪫🇰🇷韩国节点",
+        "🪫🧊冷门节点",
+        "🔋🇯🇵日本节点",
+        "🔋🇭🇰香港节点",
+        "🔋🇹🇼台湾节点",
+        "🔋🇸🇬新加坡节点",
+        "🔋🇰🇷韩国节点",
+        "🔋🧊冷门节点",
+      ]
     },
     {
       name: "📺油管视频",
       type: "select",
-      proxies: ["🪫♻️自动选择", "🔋♻️自动选择", "🚦节点选择", "👆手动选择", "🐢低倍率节点", "🪫🇯🇵日本节点", "🪫🇺🇸美国节点", "🪫🇭🇰香港节点", "🪫🇹🇼台湾节点", "🪫🇸🇬新加坡节点", "🪫🇰🇷韩国节点", "🪫🧊冷门节点", "🔋🇯🇵日本节点", "🔋🇺🇸美国节点", "🔋🇭🇰香港节点", "🔋🇹🇼台湾节点", "🔋🇸🇬新加坡节点", "🔋🇰🇷韩国节点", "🔋🧊冷门节点"]
+      proxies: [
+        "🪫♻️自动选择",
+        "🔋♻️自动选择",
+        "🚦节点选择",
+        "👆手动选择",
+        "🐢低倍率节点",
+        "🪫🇯🇵日本节点",
+        "🪫🇺🇸美国节点",
+        "🪫🇭🇰香港节点",
+        "🪫🇹🇼台湾节点",
+        "🪫🇸🇬新加坡节点",
+        "🪫🇰🇷韩国节点",
+        "🪫🧊冷门节点",
+        "🔋🇯🇵日本节点",
+        "🔋🇺🇸美国节点",
+        "🔋🇭🇰香港节点",
+        "🔋🇹🇼台湾节点",
+        "🔋🇸🇬新加坡节点",
+        "🔋🇰🇷韩国节点",
+        "🔋🧊冷门节点",
+      ]
     },
     {
       name: "📲电报消息",
       type: "select",
-      proxies: ["🔋🇺🇸美国节点", "🪫🇺🇸美国节点", "🔋♻️自动选择", "🪫♻️自动选择", "🚦节点选择", "👆手动选择", "🔋🇯🇵日本节点", "🔋🇭🇰香港节点", "🔋🇹🇼台湾节点", "🔋🇸🇬新加坡节点", "🔋🇰🇷韩国节点", "🔋🧊冷门节点", "🪫🇯🇵日本节点", "🪫🇭🇰香港节点", "🪫🇹🇼台湾节点", "🪫🇸🇬新加坡节点", "🪫🇰🇷韩国节点", "🪫🧊冷门节点", "🐢低倍率节点"]
+      proxies: [
+        "🔋🇺🇸美国节点",
+        "🪫🇺🇸美国节点",
+        "🔋♻️自动选择",
+        "🪫♻️自动选择",
+        "🚦节点选择",
+        "👆手动选择",
+        "🔋🇯🇵日本节点",
+        "🔋🇭🇰香港节点",
+        "🔋🇹🇼台湾节点",
+        "🔋🇸🇬新加坡节点",
+        "🔋🇰🇷韩国节点",
+        "🔋🧊冷门节点",
+        "🪫🇯🇵日本节点",
+        "🪫🇭🇰香港节点",
+        "🪫🇹🇼台湾节点",
+        "🪫🇸🇬新加坡节点",
+        "🪫🇰🇷韩国节点",
+        "🪫🧊冷门节点",
+        "🐢低倍率节点",
+      ]
     },
     {
       name: "📲社交平台",
       type: "select",
-      proxies: ["🔋♻️自动选择", "🪫♻️自动选择", "🚦节点选择", "👆手动选择", "🔋🇯🇵日本节点", "🔋🇺🇸美国节点", "🔋🇭🇰香港节点", "🔋🇹🇼台湾节点", "🔋🇸🇬新加坡节点", "🔋🇰🇷韩国节点", "🔋🧊冷门节点", "🪫🇯🇵日本节点", "🪫🇺🇸美国节点", "🪫🇭🇰香港节点", "🪫🇹🇼台湾节点", "🪫🇸🇬新加坡节点", "🪫🇰🇷韩国节点", "🪫🧊冷门节点", "🐢低倍率节点"]
+      proxies: [
+        "🔋♻️自动选择",
+        "🪫♻️自动选择",
+        "🚦节点选择",
+        "👆手动选择",
+        "🔋🇯🇵日本节点",
+        "🔋🇺🇸美国节点",
+        "🔋🇭🇰香港节点",
+        "🔋🇹🇼台湾节点",
+        "🔋🇸🇬新加坡节点",
+        "🔋🇰🇷韩国节点",
+        "🔋🧊冷门节点",
+        "🪫🇯🇵日本节点",
+        "🪫🇺🇸美国节点",
+        "🪫🇭🇰香港节点",
+        "🪫🇹🇼台湾节点",
+        "🪫🇸🇬新加坡节点",
+        "🪫🇰🇷韩国节点",
+        "🪫🧊冷门节点",
+        "🐢低倍率节点",
+      ]
     },
     {
       name: "🎥奈飞视频",
       type: "select",
-      proxies: ["🪫♻️自动选择", "🔋♻️自动选择", "🚦节点选择", "👆手动选择", "🐢低倍率节点", "🪫🇯🇵日本节点", "🪫🇺🇸美国节点", "🪫🇭🇰香港节点", "🪫🇹🇼台湾节点", "🪫🇸🇬新加坡节点", "🪫🇰🇷韩国节点", "🪫🧊冷门节点", "🔋🇯🇵日本节点", "🔋🇺🇸美国节点", "🔋🇭🇰香港节点", "🔋🇹🇼台湾节点", "🔋🇸🇬新加坡节点", "🔋🇰🇷韩国节点", "🔋🧊冷门节点"]
+      proxies: [
+        "🪫♻️自动选择",
+        "🔋♻️自动选择",
+        "🚦节点选择",
+        "👆手动选择",
+        "🐢低倍率节点",
+        "🪫🇯🇵日本节点",
+        "🪫🇺🇸美国节点",
+        "🪫🇭🇰香港节点",
+        "🪫🇹🇼台湾节点",
+        "🪫🇸🇬新加坡节点",
+        "🪫🇰🇷韩国节点",
+        "🪫🧊冷门节点",
+        "🔋🇯🇵日本节点",
+        "🔋🇺🇸美国节点",
+        "🔋🇭🇰香港节点",
+        "🔋🇹🇼台湾节点",
+        "🔋🇸🇬新加坡节点",
+        "🔋🇰🇷韩国节点",
+        "🔋🧊冷门节点",
+      ]
     },
     {
       name: "🍿国际媒体",
       type: "select",
-      proxies: ["🪫♻️自动选择", "🔋♻️自动选择", "🚦节点选择", "👆手动选择", "🐢低倍率节点", "🪫🇯🇵日本节点", "🪫🇺🇸美国节点", "🪫🇭🇰香港节点", "🪫🇹🇼台湾节点", "🪫🇸🇬新加坡节点", "🪫🇰🇷韩国节点", "🪫🧊冷门节点", "🔋🇯🇵日本节点", "🔋🇺🇸美国节点", "🔋🇭🇰香港节点", "🔋🇹🇼台湾节点", "🔋🇸🇬新加坡节点", "🔋🇰🇷韩国节点", "🔋🧊冷门节点"]
+      proxies: [
+        "🪫♻️自动选择",
+        "🔋♻️自动选择",
+        "🚦节点选择",
+        "👆手动选择",
+        "🐢低倍率节点",
+        "🪫🇯🇵日本节点",
+        "🪫🇺🇸美国节点",
+        "🪫🇭🇰香港节点",
+        "🪫🇹🇼台湾节点",
+        "🪫🇸🇬新加坡节点",
+        "🪫🇰🇷韩国节点",
+        "🪫🧊冷门节点",
+        "🔋🇯🇵日本节点",
+        "🔋🇺🇸美国节点",
+        "🔋🇭🇰香港节点",
+        "🔋🇹🇼台湾节点",
+        "🔋🇸🇬新加坡节点",
+        "🔋🇰🇷韩国节点",
+        "🔋🧊冷门节点",
+      ]
     },
     {
       name: "🍎苹果服务",
       type: "select",
-      proxies: ["🎯全球直连", "🚦节点选择", "👆手动选择", "🔋♻️自动选择", "🔋🇯🇵日本节点", "🔋🇺🇸美国节点", "🔋🇭🇰香港节点", "🔋🇹🇼台湾节点", "🔋🇸🇬新加坡节点", "🔋🇰🇷韩国节点", "🔋🧊冷门节点", "🪫♻️自动选择", "🪫🇯🇵日本节点", "🪫🇺🇸美国节点", "🪫🇭🇰香港节点", "🪫🇹🇼台湾节点", "🪫🇸🇬新加坡节点", "🪫🇰🇷韩国节点", "🪫🧊冷门节点", "🐢低倍率节点"]
+      proxies: [
+        "🎯全球直连",
+        "🚦节点选择",
+        "👆手动选择",
+        "🔋♻️自动选择",
+        "🔋🇯🇵日本节点",
+        "🔋🇺🇸美国节点",
+        "🔋🇭🇰香港节点",
+        "🔋🇹🇼台湾节点",
+        "🔋🇸🇬新加坡节点",
+        "🔋🇰🇷韩国节点",
+        "🔋🧊冷门节点",
+        "🪫♻️自动选择",
+        "🪫🇯🇵日本节点",
+        "🪫🇺🇸美国节点",
+        "🪫🇭🇰香港节点",
+        "🪫🇹🇼台湾节点",
+        "🪫🇸🇬新加坡节点",
+        "🪫🇰🇷韩国节点",
+        "🪫🧊冷门节点",
+        "🐢低倍率节点",
+      ]
     },
     {
       name: "🎮游戏平台",
       type: "select",
-      proxies: ["🎯全球直连", "🚦节点选择", "👆手动选择", "🔋♻️自动选择", "🔋🇯🇵日本节点", "🔋🇺🇸美国节点", "🔋🇭🇰香港节点", "🔋🇹🇼台湾节点", "🔋🇸🇬新加坡节点", "🔋🇰🇷韩国节点", "🔋🧊冷门节点", "🪫♻️自动选择", "🪫🇯🇵日本节点", "🪫🇺🇸美国节点", "🪫🇭🇰香港节点", "🪫🇹🇼台湾节点", "🪫🇸🇬新加坡节点", "🪫🇰🇷韩国节点", "🪫🧊冷门节点", "🐢低倍率节点"]
+      proxies: [
+        "🎯全球直连",
+        "🚦节点选择",
+        "👆手动选择",
+        "🔋♻️自动选择",
+        "🔋🇯🇵日本节点",
+        "🔋🇺🇸美国节点",
+        "🔋🇭🇰香港节点",
+        "🔋🇹🇼台湾节点",
+        "🔋🇸🇬新加坡节点",
+        "🔋🇰🇷韩国节点",
+        "🔋🧊冷门节点",
+        "🪫♻️自动选择",
+        "🪫🇯🇵日本节点",
+        "🪫🇺🇸美国节点",
+        "🪫🇭🇰香港节点",
+        "🪫🇹🇼台湾节点",
+        "🪫🇸🇬新加坡节点",
+        "🪫🇰🇷韩国节点",
+        "🪫🧊冷门节点",
+        "🐢低倍率节点",
+      ]
     },
     {
       name: "🎯全球直连",
       type: "select",
-      proxies: ["DIRECT", "👆手动选择", "🔋♻️自动选择", "🔋🇯🇵日本节点", "🔋🇺🇸美国节点", "🔋🇭🇰香港节点", "🔋🇹🇼台湾节点", "🔋🇸🇬新加坡节点", "🔋🇰🇷韩国节点", "🔋🧊冷门节点", "🪫♻️自动选择", "🪫🇯🇵日本节点", "🪫🇺🇸美国节点", "🪫🇭🇰香港节点", "🪫🇹🇼台湾节点", "🪫🇸🇬新加坡节点", "🪫🇰🇷韩国节点", "🪫🧊冷门节点", "🐢低倍率节点"]
+      proxies: [
+        "DIRECT",
+        "👆手动选择",
+        "🔋♻️自动选择",
+        "🔋🇯🇵日本节点",
+        "🔋🇺🇸美国节点",
+        "🔋🇭🇰香港节点",
+        "🔋🇹🇼台湾节点",
+        "🔋🇸🇬新加坡节点",
+        "🔋🇰🇷韩国节点",
+        "🔋🧊冷门节点",
+        "🪫♻️自动选择",
+        "🪫🇯🇵日本节点",
+        "🪫🇺🇸美国节点",
+        "🪫🇭🇰香港节点",
+        "🪫🇹🇼台湾节点",
+        "🪫🇸🇬新加坡节点",
+        "🪫🇰🇷韩国节点",
+        "🪫🧊冷门节点",
+        "🐢低倍率节点",
+      ]
     },
     {
       name: "🐟漏网之鱼",
       type: "select",
-      proxies: ["🚦节点选择", "👆手动选择", "🎯全球直连", "🔋♻️自动选择", "🔋🇯🇵日本节点", "🔋🇺🇸美国节点", "🔋🇭🇰香港节点", "🔋🇹🇼台湾节点", "🔋🇸🇬新加坡节点", "🔋🇰🇷韩国节点", "🔋🧊冷门节点", "🪫♻️自动选择", "🪫🇯🇵日本节点", "🪫🇺🇸美国节点", "🪫🇭🇰香港节点", "🪫🇹🇼台湾节点", "🪫🇸🇬新加坡节点", "🪫🇰🇷韩国节点", "🪫🧊冷门节点", "🐢低倍率节点"]
+      proxies: [
+        "🚦节点选择",
+        "👆手动选择",
+        "🎯全球直连",
+        "🔋♻️自动选择",
+        "🔋🇯🇵日本节点",
+        "🔋🇺🇸美国节点",
+        "🔋🇭🇰香港节点",
+        "🔋🇹🇼台湾节点",
+        "🔋🇸🇬新加坡节点",
+        "🔋🇰🇷韩国节点",
+        "🔋🧊冷门节点",
+        "🪫♻️自动选择",
+        "🪫🇯🇵日本节点",
+        "🪫🇺🇸美国节点",
+        "🪫🇭🇰香港节点",
+        "🪫🇹🇼台湾节点",
+        "🪫🇸🇬新加坡节点",
+        "🪫🇰🇷韩国节点",
+        "🪫🧊冷门节点",
+        "🐢低倍率节点",
+      ]
     },
     {
       name: "🍃应用净化",
       type: "select",
-      proxies: ["REJECT", "DIRECT"]
-    }
+      proxies: [
+        "REJECT",
+        "DIRECT"
+      ]
+    },
+
+    // --- 极简正则分组 (不带 base) ---
+    {
+      name: "🔋🧊冷门节点",
+      type: "select",
+      "include-all": true,
+      filter: `^(?=.*${regexHighQuality.source})(?!.*${regexMainRegions.source})(?!.*${regexLowRate.source}).*$`
+    },
+    {
+      name: "🪫🧊冷门节点",
+      type: "select",
+      "include-all": true,
+      filter: `^(?=.*${regexLowQuality.source})(?!.*${regexMainRegions.source})(?!.*${regexLowRate.source}).*$`
+    },
+    {
+      name: "🐢低倍率节点",
+      type: "select",
+      "include-all": true,
+      filter: `(?i)${regexLowRate.source}`
+    },
+    
+    // --- 自动测速池 ---
+    Object.assign({}, baseUT, { name: "🔋♻️自动选择", "include-all": true, filter: `^(?=.*${regexHighQuality.source})(?!.*${regexLowRate.source}).*$` }),
+    Object.assign({}, baseUT, { name: "🔋🇭🇰香港节点", "include-all": true, filter: `^(?=.*${regexHighQuality.source})(?=.*${regexRegions["香港"].source})(?!.*${regexLowRate.source}).*$` }),
+    Object.assign({}, baseUT, { name: "🔋🇹🇼台湾节点", "include-all": true, filter: `^(?=.*${regexHighQuality.source})(?=.*${regexRegions["台湾"].source})(?!.*${regexLowRate.source}).*$` }),
+    Object.assign({}, baseUT, { name: "🔋🇯🇵日本节点", "include-all": true, filter: `^(?=.*${regexHighQuality.source})(?=.*${regexRegions["日本"].source})(?!.*${regexLowRate.source}).*$` }),
+    Object.assign({}, baseUT, { name: "🔋🇺🇸美国节点", "include-all": true, filter: `^(?=.*${regexHighQuality.source})(?=.*${regexRegions["美国"].source})(?!.*${regexLowRate.source}).*$` }),
+    Object.assign({}, baseUT, { name: "🔋🇸🇬新加坡节点", "include-all": true, filter: `^(?=.*${regexHighQuality.source})(?=.*${regexRegions["新加坡"].source})(?!.*${regexLowRate.source}).*$` }),
+    Object.assign({}, baseUT, { name: "🔋🇰🇷韩国节点", "include-all": true, filter: `^(?=.*${regexHighQuality.source})(?=.*${regexRegions["韩国"].source})(?!.*${regexLowRate.source}).*$` }),
+
+    Object.assign({}, baseUT, { name: "🪫♻️自动选择", "include-all": true, filter: `^(?=.*${regexLowQuality.source}).*$` }),
+    Object.assign({}, baseUT, { name: "🪫🇭🇰香港节点", "include-all": true, filter: `^(?=.*${regexLowQuality.source})(?=.*${regexRegions["香港"].source}).*$` }),
+    Object.assign({}, baseUT, { name: "🪫🇹🇼台湾节点", "include-all": true, filter: `^(?=.*${regexLowQuality.source})(?=.*${regexRegions["台湾"].source}).*$` }),
+    Object.assign({}, baseUT, { name: "🪫🇯🇵日本节点", "include-all": true, filter: `^(?=.*${regexLowQuality.source})(?=.*${regexRegions["日本"].source}).*$` }),
+    Object.assign({}, baseUT, { name: "🪫🇺🇸美国节点", "include-all": true, filter: `^(?=.*${regexLowQuality.source})(?=.*${regexRegions["美国"].source}).*$` }),
+    Object.assign({}, baseUT, { name: "🪫🇸🇬新加坡节点", "include-all": true, filter: `^(?=.*${regexLowQuality.source})(?=.*${regexRegions["新加坡"].source}).*$` }),
+    Object.assign({}, baseUT, { name: "🪫🇰🇷韩国节点", "include-all": true, filter: `^(?=.*${regexLowQuality.source})(?=.*${regexRegions["韩国"].source}).*$` })
   ];
 
-  // 提前将所有上层组的名称也注册到白名单中，防止互相引用时被误杀
-  topGroups.forEach(g => validGroupNames.add(g.name));
+  // ============================================================================
+  // 3.5 动态清理空分组 (按需显示)
+  // ============================================================================
+  if (config.proxies && config.proxies.length > 0) {
+    const proxyNames = config.proxies.map(p => p.name);
+    const emptyGroups = new Set();
 
-  // --- 3.3 输出清理后的最终策略组 ---
-  topGroups.forEach(g => {
-    // 关键过滤：仅保留有效存在的组名（如果前面某个冷门分组因空集没创建，这里会自动删掉它的引用）
-    g.proxies = g.proxies.filter(p => validGroupNames.has(p));
-    generatedGroups.push(g);
-  });
+    // 扫描找出没有任何节点匹配的正则组
+    config["proxy-groups"].forEach(group => {
+      if (group.filter) {
+        let regexStr = group.filter;
+        if (regexStr.startsWith('(?i)')) regexStr = regexStr.substring(4);
+        try {
+          const regex = new RegExp(regexStr, 'iu');
+          if (!proxyNames.some(name => regex.test(name))) {
+            emptyGroups.add(group.name);
+          }
+        } catch (e) {
+          // 忽略不支持的正则语法报错，默认放行
+        }
+      }
+    });
 
-  config["proxy-groups"] = generatedGroups;
+    // 从全局抹除这些空组的存在
+    config["proxy-groups"] = config["proxy-groups"].filter(g => !emptyGroups.has(g.name));
+    config["proxy-groups"].forEach(group => {
+      if (group.proxies) {
+        group.proxies = group.proxies.filter(p => !emptyGroups.has(p));
+      }
+    });
+  }
 
   // ============================================================================
   // 4. 规则提供者
@@ -287,6 +631,7 @@ function main(config) {
   config["rules"] = [
     "RULE-SET,Tracking,🍃应用净化",
     "RULE-SET,Advertising,🍃应用净化",
+    //"AND,((DST-PORT,443),(NETWORK,UDP),(NOT,((GEOIP,CN)))),🍃应用净化",
 
     "RULE-SET,Private,🎯全球直连",
     "RULE-SET,Direct,🎯全球直连",
