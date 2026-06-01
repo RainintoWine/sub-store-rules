@@ -548,38 +548,6 @@ function main(config) {
   ];
 
   // ============================================================================
-  // 3.5 动态清理空分组 (按需显示)
-  // ============================================================================
-  if (config.proxies && config.proxies.length > 0) {
-    const proxyNames = config.proxies.map(p => p.name);
-    const emptyGroups = new Set();
-
-    // 扫描找出没有任何节点匹配的正则组
-    config["proxy-groups"].forEach(group => {
-      if (group.filter) {
-        let regexStr = group.filter;
-        if (regexStr.startsWith('(?i)')) regexStr = regexStr.substring(4);
-        try {
-          const regex = new RegExp(regexStr, 'iu');
-          if (!proxyNames.some(name => regex.test(name))) {
-            emptyGroups.add(group.name);
-          }
-        } catch (e) {
-          // 忽略不支持的正则语法报错，默认放行
-        }
-      }
-    });
-
-    // 从全局抹除这些空组的存在
-    config["proxy-groups"] = config["proxy-groups"].filter(g => !emptyGroups.has(g.name));
-    config["proxy-groups"].forEach(group => {
-      if (group.proxies) {
-        group.proxies = group.proxies.filter(p => !emptyGroups.has(p));
-      }
-    });
-  }
-
-  // ============================================================================
   // 4. 规则提供者
   // ============================================================================
   const behaviorDN = { type: "http", behavior: "domain", format: "mrs", interval: 86400 };
