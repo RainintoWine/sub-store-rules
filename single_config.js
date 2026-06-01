@@ -80,9 +80,27 @@ function main(config) {
   // ============================================================================
   // 3. 策略组装 (竖排易编辑排版)
   // ============================================================================
-  const baseUT = { type: "url-test", interval: 300, tolerance: 50, timeout: 5000, lazy: true, url: "http://www.gstatic.com/generate_204", hidden: true };
-  const baseFB = { type: "fallback", interval: 300, timeout: 5000, lazy: true, url: "http://www.gstatic.com/generate_204", hidden: false };
-
+  const baseUT = { 
+    type: "url-test", 
+    interval: 120, // 缩短间隔以便更敏锐地感知节点健康度变化
+    tolerance: 30, // 适当调低容差，避免卡在次优节点上
+    timeout: 3000, 
+    lazy: true, 
+    url: "https://cp.cloudflare.com/generate_204", 
+    "expected-status": 204, // 严格匹配 204 状态码
+    hidden: true 
+  };
+  
+  const baseFB = { 
+    type: "fallback", 
+    interval: 120, 
+    timeout: 3000, 
+    lazy: true, 
+    url: "https://cp.cloudflare.com/generate_204", 
+    "expected-status": 204,
+    hidden: false 
+  };
+  
   config["proxy-groups"] = [
     {
       name: "🚦节点选择",
