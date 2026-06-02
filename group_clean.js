@@ -35,7 +35,7 @@ const trafficKillRegex = /(?:剩余|流量|已用|TOTAL|USE|USED|Traffic)[\s\S]*
 const expireKillRegex = /(?:到期|过期|有效期?|下次重置?|EXPIRE)[\s\S]*?(?:\d{2,4}[-/.年]\d{1,2}[-/.月]\d{1,2}日?|长期(?:有效)?|永久(?:有效)?|无限期|无期限|不限时|按量计费|定量包?|流量包|None|Never|Unlimited|Lifetime)/i;
 
 // 3.2 流放正则：所有广告、营销词、以及孤立的面板词
-const pollutionRegex = /(?:过滤.*?\d+.*?条|群|交流|公告|反馈|频道|通知|关注|加入|更新|Channel|Panel|重置|RESET|账单|结算|邀请|返利|套餐|客服|官网|网站|网址|获取|订阅|联系|邮箱|工单|说明|提示|教程|EMAIL|贩卖|倒卖|到期|有效|剩余|过期|已用|下次|EXPIRE|TOTAL|USE|USED|Traffic)/i;
+const pollutionRegex = /(?:过滤.*?\d+.*?条|群|交流|公告|反馈|频道|通知|关注|加入|更新|Channel|Panel|重置|RESET|账单|结算|邀请|返利|套餐|客服|https?:\/\/|官网|网站|网址|获取|订阅|联系|邮箱|工单|说明|提示|教程|EMAIL|贩卖|倒卖|到期|有效|剩余|过期|已用|下次|EXPIRE|TOTAL|USE|USED|Traffic)/i;
 
 // ==========================================
 // 🚀 执行 5 步双轨制过滤工作流
