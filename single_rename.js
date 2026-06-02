@@ -44,32 +44,37 @@ const QCUpper = QC.map(name => name.toUpperCase());
 // 🧠 3. 核心二：高精度实战地区识别引擎 (第二优先级雷达)
 // ==========================================
 const rurekey = {
+    // 核心主力地区
     "香港": /香港|(?:深|沪|呼|京|广|杭)港|(?<![\u4e00-\u9fa5])港(?![\u4e00-\u9fa5])|(?<![a-zA-Z])HK(?![a-zA-Z])|Hong(?:Kong)?|HKG|🇭🇰/i,
     "台湾": /台湾|新北|彰化|台北|(?<![\u4e00-\u9fa5])台(?![\u4e00-\u9fa5])|(?<![a-zA-Z])TW(?![a-zA-Z])|Tai\s?wan|Tai(?:pei)?|TPE|TSA|KHH|🇹🇼/i,
     "日本": /日本|东京|大[阪坂]|埼玉|(?:川|泉|沪|深|中|辽)日|(?<![\u4e00-\u9fa5])日(?![\u4e00-\u9fa5])|(?<![a-zA-Z])JP(?![a-zA-Z])|Japan|Tokyo|Osaka|NRT|HND|KIX|CTS|FUK|🇯🇵/i,
     "美国": /美国|波特兰|达拉斯|俄勒冈|凤凰城|费利蒙|硅谷|拉斯维加斯|洛杉矶|圣何塞|圣克拉拉|西雅图|芝加哥|哥伦布|纽约|(?:深|沪|呼|京|广|杭)美|(?<![\u4e00-\u9fa5])美(?![\u4e00-\u9fa5])|(?<![a-zA-Z])US(?:A)?(?![a-zA-Z])|United States|Los Angeles|San Jose|Silicon Valley|Michigan|ATL|BUF|DFW|EWR|IAD|JFK|LAX|MCI|MIA|ORD|PDX|PHX|SEA|SFO|SJC|🇺🇸/i,
     "韩国": /韩国|首尔|春川|南朝鲜|(?<![\u4e00-\u9fa5])韩(?![\u4e00-\u9fa5])|(?<![a-zA-Z])KR(?![a-zA-Z])|KOR|Korea|South Korea|Seoul|Chuncheon|ICN|🇰🇷/i,
     "新加坡": /新加坡|狮城|(?:深|沪|呼|京|广|杭)新|(?<![\u4e00-\u9fa5])坡(?![\u4e00-\u9fa5])|(?<![a-zA-Z])SG(?![a-zA-Z])|Sing(?:apore)?|SIN|XSP|🇸🇬/i,
-    "英国": /英国|伦敦|(?<![\u4e00-\u9fa5])英(?![\u4e00-\u9fa5])|UK|(?<!\d\s?)(?<![a-zA-Z])GB(?![a-zA-Z])|United Kingdom|Great Britain|London|LHR|🇬🇧/i,
-    "阿联酋": /阿联酋|迪拜|阿拉伯联合酋长国|AE|UAE|Dubai|United Arab Emirates|DXB|🇦🇪/i,
-    "俄罗斯": /俄罗斯|莫斯科|伯力|海参崴|(?<![\u4e00-\u9fa5])俄(?![\u4e00-\u9fa5])|RU|Russia|Moscow|SVO|🇷🇺/i,
-    "德国": /德国|法兰克福|慕尼黑|(?:深|沪|呼|京|广|杭|滬)德(?!.*(?:I|线))|(?<![\u4e00-\u9fa5])德(?![\u4e00-\u9fa5])|DE|Germany|Frankfurt|FRA|MUC|🇩🇪/i,
-    "法国": /法国|巴黎|(?<![\u4e00-\u9fa5])法(?![\u4e00-\u9fa5])|FR|France|Paris|CDG|🇫🇷/i,
-    "荷兰": /荷兰|阿姆斯特丹|(?<![\u4e00-\u9fa5])荷(?![\u4e00-\u9fa5])|NL|Netherlands|Amsterdam|AMS|🇳🇱/i,
-    "意大利": /意大利|罗马|米兰|(?<![\u4e00-\u9fa5])意(?![\u4e00-\u9fa5])|IT|Italy|Rome|Milan|FCO|MXP|🇮🇹/i,
-    "西班牙": /西班牙|马德里|巴塞罗那|(?<![\u4e00-\u9fa5])西(?![\u4e00-\u9fa5])|ES|Spain|Madrid|Barcelona|MAD|BCN|🇪🇸/i,
-    "瑞士": /瑞士|苏黎世|CH|Switzerland|Zurich|ZRH|🇨🇭/i,
-    "瑞典": /瑞典|SE|Sweden|🇸🇪/i,
-    "捷克": /捷克(?:共和国)?|CZ|Czech|🇨🇿/i,
-    "比利时": /比利时|布鲁塞尔|BE|Belgium|Brussels|BRU|🇧🇪/i,
-    "波斯尼亚和黑塞哥维那": /波黑(?:共和国)?|波斯尼亚和黑塞哥维那|BA|Bosnia|Herzegovina|🇧🇦/i, 
-    "澳大利亚": /澳大利亚|澳洲|墨尔本|悉尼|土澳|(?:深|沪|呼|京|广|杭)澳|AU|Australia|Sydney|Melbourne|SYD|MEL|🇦🇺/i,
-    "泰国": /泰[国國]|曼谷|TH|Thailand|Bangkok|BKK|🇹🇭/i,
-    "印尼": /印尼|印度尼西亚|雅加达|ID|Indonesia|Jakarta|CGK|🇮🇩/i,
-    "印度": /印度|孟买|IN|India|Mumbai|BOM|🇮🇳/i,
+    
+    // 欧洲及其他高价值地区 (已全面加固字母边界)
+    "英国": /英国|伦敦|(?<![\u4e00-\u9fa5])英(?![\u4e00-\u9fa5])|(?<![a-zA-Z])UK(?![a-zA-Z])|(?<!\d\s?)(?<![a-zA-Z])GB(?![a-zA-Z])|United Kingdom|Great Britain|London|LHR|🇬🇧/i,
+    "阿联酋": /阿联酋|迪拜|阿拉伯联合酋长国|(?<![a-zA-Z])(?:AE|UAE)(?![a-zA-Z])|Dubai|United Arab Emirates|DXB|🇦🇪/i,
+    "俄罗斯": /俄罗斯|莫斯科|伯力|海参崴|(?<![\u4e00-\u9fa5])俄(?![\u4e00-\u9fa5])|(?<![a-zA-Z])RU(?![a-zA-Z])|Russia|Moscow|SVO|🇷🇺/i,
+    "德国": /德国|法兰克福|慕尼黑|(?:深|沪|呼|京|广|杭|滬)德(?!.*(?:I|线))|(?<![\u4e00-\u9fa5])德(?![\u4e00-\u9fa5])|(?<![a-zA-Z])DE(?![a-zA-Z])|Germany|Frankfurt|FRA|MUC|🇩🇪/i,
+    "法国": /法国|巴黎|(?<![\u4e00-\u9fa5])法(?![\u4e00-\u9fa5])|(?<![a-zA-Z])FR(?![a-zA-Z])|France|Paris|CDG|🇫🇷/i,
+    "荷兰": /荷兰|阿姆斯特丹|(?<![\u4e00-\u9fa5])荷(?![\u4e00-\u9fa5])|(?<![a-zA-Z])NL(?![a-zA-Z])|Netherlands|Amsterdam|AMS|🇳🇱/i,
+    "意大利": /意大利|罗马|米兰|(?<![\u4e00-\u9fa5])意(?![\u4e00-\u9fa5])|(?<![a-zA-Z])IT(?![a-zA-Z])|Italy|Rome|Milan|FCO|MXP|🇮🇹/i,
+    "西班牙": /西班牙|马德里|巴塞罗那|(?<![\u4e00-\u9fa5])西(?![\u4e00-\u9fa5])|(?<![a-zA-Z])ES(?![a-zA-Z])|Spain|Madrid|Barcelona|MAD|BCN|🇪🇸/i,
+    "瑞士": /瑞士|苏黎世|(?<![a-zA-Z])CH(?![a-zA-Z])|Switzerland|Zurich|ZRH|🇨🇭/i,
+    "瑞典": /瑞典|(?<![a-zA-Z])SE(?![a-zA-Z])|Sweden|🇸🇪/i,
+    "捷克": /捷克(?:共和国)?|(?<![a-zA-Z])CZ(?![a-zA-Z])|Czech|🇨🇿/i,
+    "比利时": /比利时|布鲁塞尔|(?<![a-zA-Z])BE(?![a-zA-Z])|Belgium|Brussels|BRU|🇧🇪/i,
+    "波斯尼亚和黑塞哥维那": /波黑(?:共和国)?|波斯尼亚和黑塞哥维那|(?<![a-zA-Z])BA(?![a-zA-Z])|Bosnia|Herzegovina|🇧🇦/i, 
+    "澳大利亚": /澳大利亚|澳洲|墨尔本|悉尼|土澳|(?:深|沪|呼|京|广|杭)澳|(?<![a-zA-Z])AU(?![a-zA-Z])|Australia|Sydney|Melbourne|SYD|MEL|🇦🇺/i,
+    "泰国": /泰[国國]|曼谷|(?<![a-zA-Z])TH(?![a-zA-Z])|Thailand|Bangkok|BKK|🇹🇭/i,
+    "印尼": /印尼|印度尼西亚|雅加达|(?<![a-zA-Z])ID(?![a-zA-Z])|Indonesia|Jakarta|CGK|🇮🇩/i,
+    "印度": /印度|孟买|(?<![a-zA-Z])IN(?![a-zA-Z])|India|Mumbai|BOM|🇮🇳/i,
     "土耳其": /土耳其|伊斯坦布尔|(?<![a-zA-Z])TR(?![a-zA-Z])|Turkey|Istanbul|IST|🇹🇷/i, 
-    "孟加拉国": /孟加拉(?:国)?|BD|Bangladesh|🇧🇩/i,
+    "孟加拉国": /孟加拉(?:国)?|(?<![a-zA-Z])BD(?![a-zA-Z])|Bangladesh|🇧🇩/i,
     "阿根廷": /阿根廷|(?<![a-zA-Z])AR(?:G)?(?![a-zA-Z])|Argentina|BUE|EZE|🇦🇷/i,
+    
+    // 其他地区
     "澳门": /澳门|(?<![a-zA-Z])MO(?![a-zA-Z])|Macau|MFM|🇲🇴/i,
     "越南": /越南|(?<![a-zA-Z])VN(?![a-zA-Z])|Vietnam|SGN|HAN|🇻🇳/i,
     "加拿大": /加拿大|(?<![a-zA-Z])CA(?![a-zA-Z])|Canada|YVR|YYZ|🇨🇦/i,
@@ -85,6 +90,7 @@ const rurekey = {
     "沙特阿拉伯": /沙特(?:阿拉伯)?/i,
     "哈萨克斯坦": /哈萨克(?:斯坦)?/i
 };
+
 
 // ==========================================
 // 🚀 4. 主执行工作流
