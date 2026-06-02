@@ -90,7 +90,7 @@ function main(config) {
     lazy: true, 
     url: "https://cp.cloudflare.com/generate_204", 
     "expected-status": 204, // 严格匹配 204 状态码
-    hidden: true 
+    hidden: false 
   };
   
   config["proxy-groups"] = [
