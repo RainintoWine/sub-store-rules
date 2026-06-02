@@ -60,8 +60,8 @@ function main(config) {
   if (config.proxies && Array.isArray(config.proxies)) {
     config.proxies.forEach(p => {
       if (p.name) {
-        // 修复 500 报错：避免使用 [🔋🪫] 导致 JS 底层将代理对字符截断
-        p.name = p.name.replace(/🔋/g, "").replace(/🪫/g, "");
+        // 主动删除节点名中可能带有的🔋和🪫标记
+        p.name = p.name.replace(/[🔋🪫]/g, "");
       }
     });
   }
@@ -100,7 +100,7 @@ function main(config) {
     lazy: true, 
     url: "https://cp.cloudflare.com/generate_204", 
     "expected-status": 204, // 严格匹配 204 状态码
-    hidden: false 
+    hidden: true 
   };
   
   config["proxy-groups"] = [
