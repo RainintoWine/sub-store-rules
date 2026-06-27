@@ -45,7 +45,7 @@ const QCUpper = QC.map(name => name.toUpperCase());
 // ==========================================
 const rurekey = {
     // 核心主力地区
-    "香港": /香港|(?:深|沪|呼|京|广|杭)港|(?<![\u4e00-\u9fa5])港(?![\u4e00-\u9fa5])|(?<![a-zA-Z])HK(?![a-zA-Z])|Hong(?:Kong)?|HKG|🇭🇰/i,
+    "香港": /香港|(?:深|沪|呼|京|广|杭)港|(?<![\u4e00-\u9fa5])港(?![\u4e00-\u9fa5])|(?<![a-zA-Z])HK(?![a-zA-Z])|Hong(?:Kong)?|HKG|HKBN|🇭🇰/i,
     "台湾": /台湾|新北|彰化|台北|(?<![\u4e00-\u9fa5])台(?![\u4e00-\u9fa5])|(?<![a-zA-Z])TW(?![a-zA-Z])|Tai\s?wan|Tai(?:pei)?|TPE|TSA|KHH|🇹🇼/i,
     "日本": /日本|东京|大[阪坂]|埼玉|(?:川|泉|沪|深|中|辽)日|(?<![\u4e00-\u9fa5])日(?![\u4e00-\u9fa5])|(?<![a-zA-Z])JP(?![a-zA-Z])|Japan|Tokyo|Osaka|NRT|HND|KIX|CTS|FUK|🇯🇵/i,
     "美国": /美国|波特兰|达拉斯|俄勒冈|凤凰城|费利蒙|硅谷|拉斯维加斯|洛杉矶|圣何塞|圣克拉拉|西雅图|芝加哥|哥伦布|纽约|(?:深|沪|呼|京|广|杭)美|(?<![\u4e00-\u9fa5])美(?![\u4e00-\u9fa5])|(?<![a-zA-Z])US(?:A)?(?![a-zA-Z])|United States|Los Angeles|San Jose|Silicon Valley|Michigan|ATL|BUF|DFW|EWR|IAD|JFK|LAX|MCI|MIA|ORD|PDX|PHX|SEA|SFO|SJC|🇺🇸/i,
