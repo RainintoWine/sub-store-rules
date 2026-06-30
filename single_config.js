@@ -476,6 +476,7 @@ function main(config) {
     "RULE-SET,XPTV,🎯全球直连",
     "RULE-SET,AppleCN,🎯全球直连",
     "RULE-SET,AI,🤖人工智能",
+    "DOMAIN-SUFFIX,openevidence.com,🤖人工智能",
     "RULE-SET,Crypto,🪙Crypto",
     "RULE-SET,Telegram,📲电报消息",
     "RULE-SET,SocialMedia,📲社交平台",
