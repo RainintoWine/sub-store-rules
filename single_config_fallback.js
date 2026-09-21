@@ -55,6 +55,18 @@ function main(config) {
   };
 
   // ============================================================================
+  // 1.5 节点名称预处理 (清理冗余标记)
+  // ============================================================================
+  if (config.proxies && Array.isArray(config.proxies)) {
+    config.proxies.forEach(p => {
+      if (p.name) {
+        // 主动删除节点名中可能带有的🔋和🪫标记
+        p.name = p.name.replace(/[🔋🪫]/g, "");
+      }
+    });
+  }
+
+  // ============================================================================
   // 2. 高性能正则匹配引擎
   // ============================================================================
   const regexLowRate = /(?:0\.[0-8](?:[xX]|倍)|[xX]0\.[0-8]|低倍率|省流|实验性|免费|test|beta)/iu;
@@ -91,23 +103,12 @@ function main(config) {
     hidden: true 
   };
   
-  const baseFB = { 
-    type: "fallback", 
-    interval: 120, 
-    timeout: 3000, 
-    lazy: true, 
-    url: "https://cp.cloudflare.com/generate_204", 
-    "expected-status": 204,
-    hidden: false 
-  };
-  
   config["proxy-groups"] = [
     {
       name: "🚦节点选择",
       type: "select",
       proxies: [
         "♻️自动选择",
-        "🛟故障转移",
         "🇯🇵日本节点",
         "🇺🇸美国节点",
         "🇭🇰香港节点",
@@ -143,7 +144,6 @@ function main(config) {
         "🚦节点选择",
         "👆手动选择",
         "♻️自动选择",
-        "🛟故障转移",
         "🇯🇵日本节点",
         "🇹🇼台湾节点",
         "🇸🇬新加坡节点",
@@ -165,9 +165,8 @@ function main(config) {
         "👆手动选择",
         "🇯🇵日本节点",
         "🇰🇷韩国节点",
-        "🧊冷门节点",
         "♻️自动选择",
-        "🛟故障转移",
+        "🧊冷门节点",
         "🐢低倍率节点",
         "🎯全球直连"
       ],
@@ -181,7 +180,6 @@ function main(config) {
         "🚦节点选择",
         "👆手动选择",
         "♻️自动选择",
-        "🛟故障转移",
         "🇯🇵日本节点",
         "🇺🇸美国节点",
         "🇭🇰香港节点",
@@ -202,7 +200,6 @@ function main(config) {
         "👆手动选择",
         "🎯全球直连",
         "♻️自动选择",
-        "🛟故障转移",
         "🇯🇵日本节点",
         "🇺🇸美国节点",
         "🇭🇰香港节点",
@@ -218,7 +215,6 @@ function main(config) {
       type: "select",
       proxies: [
         "🇺🇸美国节点",
-        "🛟故障转移",
         "♻️自动选择",
         "🚦节点选择",
         "👆手动选择",
@@ -236,7 +232,6 @@ function main(config) {
       name: "📺油管视频",
       type: "select",
       proxies: [
-        "🛟故障转移",
         "♻️自动选择",
         "🚦节点选择",
         "👆手动选择",
@@ -258,7 +253,6 @@ function main(config) {
         "♻️自动选择",
         "🚦节点选择",
         "👆手动选择",
-        "🛟故障转移",
         "🇯🇵日本节点",
         "🇭🇰香港节点",
         "🇹🇼台湾节点",
@@ -275,7 +269,6 @@ function main(config) {
         "♻️自动选择",
         "🚦节点选择",
         "👆手动选择",
-        "🛟故障转移",
         "🇯🇵日本节点",
         "🇺🇸美国节点",
         "🇭🇰香港节点",
@@ -290,7 +283,6 @@ function main(config) {
       name: "🎥奈飞视频",
       type: "select",
       proxies: [
-        "🛟故障转移",
         "♻️自动选择",
         "🚦节点选择",
         "👆手动选择",
@@ -308,7 +300,6 @@ function main(config) {
       name: "🍿国际媒体",
       type: "select",
       proxies: [
-        "🛟故障转移",
         "♻️自动选择",
         "🚦节点选择",
         "👆手动选择",
@@ -330,7 +321,6 @@ function main(config) {
         "🚦节点选择",
         "👆手动选择",
         "♻️自动选择",
-        "🛟故障转移",
         "🇯🇵日本节点",
         "🇺🇸美国节点",
         "🇭🇰香港节点",
@@ -349,7 +339,6 @@ function main(config) {
         "🚦节点选择",
         "👆手动选择",
         "♻️自动选择",
-        "🛟故障转移",
         "🇯🇵日本节点",
         "🇺🇸美国节点",
         "🇭🇰香港节点",
@@ -367,7 +356,6 @@ function main(config) {
         "DIRECT",
         "👆手动选择",
         "♻️自动选择",
-        "🛟故障转移",
         "🇯🇵日本节点",
         "🇺🇸美国节点",
         "🇭🇰香港节点",
@@ -386,7 +374,6 @@ function main(config) {
         "👆手动选择",
         "🎯全球直连",
         "♻️自动选择",
-        "🛟故障转移",
         "🇯🇵日本节点",
         "🇺🇸美国节点",
         "🇭🇰香港节点",
@@ -420,8 +407,6 @@ function main(config) {
       filter: `(?i)${regexLowRate.source}`
     },
     
-    Object.assign({}, baseFB, { name: "🛟故障转移", proxies: ["🇯🇵日本节点", "🇹🇼台湾节点", "🇺🇸美国节点", "🇭🇰香港节点", "🇰🇷韩国节点", "🇸🇬新加坡节点","🧊冷门节点",] }),
-
     // --- 自动测速池 ---
     Object.assign({}, baseUT, { name: "♻️自动选择", "include-all": true, filter: `^(?!.*${regexLowRate.source}).*$` }),
     Object.assign({}, baseUT, { name: "🇭🇰香港节点", "include-all": true, filter: `^(?=.*${regexRegions["香港"].source})(?!.*${regexLowRate.source}).*$` }),
@@ -429,7 +414,7 @@ function main(config) {
     Object.assign({}, baseUT, { name: "🇯🇵日本节点", "include-all": true, filter: `^(?=.*${regexRegions["日本"].source})(?!.*${regexLowRate.source}).*$` }),
     Object.assign({}, baseUT, { name: "🇺🇸美国节点", "include-all": true, filter: `^(?=.*${regexRegions["美国"].source})(?!.*${regexLowRate.source}).*$` }),
     Object.assign({}, baseUT, { name: "🇸🇬新加坡节点", "include-all": true, filter: `^(?=.*${regexRegions["新加坡"].source})(?!.*${regexLowRate.source}).*$` }),
-    Object.assign({}, baseUT, { name: "🇰🇷韩国节点", "include-all": true, filter: `^(?=.*${regexRegions["韩国"].source})(?!.*${regexLowRate.source}).*$` }),
+    Object.assign({}, baseUT, { name: "🇰🇷韩国节点", "include-all": true, filter: `^(?=.*${regexRegions["韩国"].source})(?!.*${regexLowRate.source}).*$` })
   ];
 
   // ============================================================================
@@ -491,6 +476,7 @@ function main(config) {
     "RULE-SET,XPTV,🎯全球直连",
     "RULE-SET,AppleCN,🎯全球直连",
     "RULE-SET,AI,🤖人工智能",
+    "DOMAIN-SUFFIX,openevidence.com,🤖人工智能",
     "RULE-SET,Crypto,🪙Crypto",
     "RULE-SET,Telegram,📲电报消息",
     "RULE-SET,SocialMedia,📲社交平台",
