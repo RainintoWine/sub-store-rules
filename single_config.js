@@ -2,55 +2,63 @@ function main(config) {
   // ============================================================================
   // 1. 核心系统参数注入
   // ============================================================================
-  config["port"] = 7890;
-  config["socks-port"] = 7891;
-  config["redir-port"] = 7892;
-  config["mixed-port"] = 7893;
+  // 端口与 external-controller 交由客户端管理，避免跨平台覆写冲突。
   config["allow-lan"] = true;
   config["bind-address"] = "*";
   config["unified-delay"] = true;
   config["mode"] = "rule";
-  config["log-level"] = "info";
   config["ipv6"] = false;
-  config["tcp-concurrent"] = false;
-  config["external-controller"] = "127.0.0.1:9090";
+  config["tcp-concurrent"] = true;
 
-  config["experimental"] = {
-    "ignore-resolve-fail": true,
-    "quic-go-disable-gso": true
-  };
-
-  config["sniffer"] = {
+  config["sniffer"] = Object.assign({}, config["sniffer"] || {}, {
     "enable": true,
+    "parse-pure-ip": true,
     "override-destination": false,
     "sniff": {
-      "HTTP": { "ports": [80, "8080-8880"], "override-destination": true },
-      "TLS": { "ports": [443, 8443], "override-destination": true },
+      "HTTP": { "ports": [80, "8080-8880"] },
+      "TLS": { "ports": [443, 8443] },
       "QUIC": { "ports": [443, 8443] }
     },
     "skip-domain": ["Mijia Cloud", "dlg.io.mi.com", "+.push.apple.com"]
-  };
+  });
 
   config["dns"] = {
     "enable": true,
     "ipv6": false,
-    "listen": "0.0.0.0:1053",
+    "cache-algorithm": "arc",
     "enhanced-mode": "fake-ip",
     "fake-ip-range": "198.18.0.1/16",
     "respect-rules": true,
     "use-hosts": false,
     "use-system-hosts": false,
-    "default-nameserver": ["223.5.5.5", "119.29.29.29", "180.184.1.1"],
+    "default-nameserver": ["223.5.5.5", "119.29.29.29"],
     "nameserver": ["https://1.1.1.1/dns-query", "https://8.8.8.8/dns-query"],
     "nameserver-policy": {
-      "geosite:cn": ["https://dns.alidns.com/dns-query", "https://doh.pub/dns-query"]
+      "geosite:private": "system",
+      "geosite:cn": [
+        "https://dns.alidns.com/dns-query",
+        "https://doh.pub/dns-query"
+      ]
     },
-    "proxy-server-nameserver": ["https://dns.alidns.com/dns-query", "https://doh.pub/dns-query"],
-    "direct-nameserver": ["https://dns.alidns.com/dns-query", "https://doh.pub/dns-query"],
+    "proxy-server-nameserver": [
+      "https://dns.alidns.com/dns-query",
+      "https://doh.pub/dns-query"
+    ],
+    "direct-nameserver": [
+      "https://dns.alidns.com/dns-query",
+      "https://doh.pub/dns-query"
+    ],
     "direct-nameserver-follow-policy": true,
     "fake-ip-filter": [
-      "rule-set:Direct","rule-set:Private","rule-set:China",
-      "+.miwifi.com","+.docker.io","+.market.xiaomi.com","+.push.apple.com","+.stun.*","stun.*.*"
+      "geosite:private",
+      "geosite:category-ntp",
+      "stun.*.*",
+      "stun.*.*.*",
+      "+.stun.*.*",
+      "+.stun.*.*.*",
+      "+.push.apple.com",
+      "+.miwifi.com",
+      "+.market.xiaomi.com"
     ]
   };
 
@@ -94,12 +102,13 @@ function main(config) {
   // ============================================================================
   const baseUT = { 
     type: "url-test", 
-    interval: 120, // 缩短间隔以便更敏锐地感知节点健康度变化
-    tolerance: 30, // 适当调低容差，避免卡在次优节点上
-    timeout: 3000, 
+    interval: 300,
+    tolerance: 50,
+    timeout: 5000,
+    "max-failed-times": 2,
     lazy: true, 
     url: "https://cp.cloudflare.com/generate_204", 
-    "expected-status": 204, // 严格匹配 204 状态码
+    "expected-status": 204,
     hidden: true 
   };
   
@@ -192,43 +201,6 @@ function main(config) {
       ]
     },
     {
-      name: "Ⓜ️微软服务",
-      type: "select",
-      proxies: [
-        "🤖人工智能",
-        "🚦节点选择",
-        "👆手动选择",
-        "🎯全球直连",
-        "♻️自动选择",
-        "🇯🇵日本节点",
-        "🇺🇸美国节点",
-        "🇭🇰香港节点",
-        "🇹🇼台湾节点",
-        "🇸🇬新加坡节点",
-        "🇰🇷韩国节点",
-        "🧊冷门节点",
-        "🐢低倍率节点",
-      ]
-    },
-    {
-      name: "🎵Spotify",
-      type: "select",
-      proxies: [
-        "🇺🇸美国节点",
-        "♻️自动选择",
-        "🚦节点选择",
-        "👆手动选择",
-        "🐢低倍率节点",
-        "🎯全球直连", 
-        "🇯🇵日本节点",
-        "🇭🇰香港节点",
-        "🇹🇼台湾节点",
-        "🇸🇬新加坡节点",
-        "🇰🇷韩国节点",
-        "🧊冷门节点",
-      ]
-    },
-    {
       name: "📺油管视频",
       type: "select",
       proxies: [
@@ -243,23 +215,6 @@ function main(config) {
         "🇸🇬新加坡节点",
         "🇰🇷韩国节点",
         "🧊冷门节点",
-      ]
-    },
-    {
-      name: "📲电报消息",
-      type: "select",
-      proxies: [
-        "🇺🇸美国节点",
-        "♻️自动选择",
-        "🚦节点选择",
-        "👆手动选择",
-        "🇯🇵日本节点",
-        "🇭🇰香港节点",
-        "🇹🇼台湾节点",
-        "🇸🇬新加坡节点",
-        "🇰🇷韩国节点",
-        "🧊冷门节点",
-        "🐢低倍率节点",
       ]
     },
     {
@@ -280,7 +235,7 @@ function main(config) {
       ]
     },
     {
-      name: "🎥奈飞视频",
+      name: "🍿国际媒体",
       type: "select",
       proxies: [
         "♻️自动选择",
@@ -297,13 +252,14 @@ function main(config) {
       ]
     },
     {
-      name: "🍿国际媒体",
+      name: "Ⓜ️微软服务",
       type: "select",
       proxies: [
-        "♻️自动选择",
+        "🤖人工智能",
         "🚦节点选择",
         "👆手动选择",
-        "🐢低倍率节点",
+        "🎯全球直连",
+        "♻️自动选择",
         "🇯🇵日本节点",
         "🇺🇸美国节点",
         "🇭🇰香港节点",
@@ -311,6 +267,7 @@ function main(config) {
         "🇸🇬新加坡节点",
         "🇰🇷韩国节点",
         "🧊冷门节点",
+        "🐢低倍率节点",
       ]
     },
     {
@@ -385,7 +342,7 @@ function main(config) {
       ]
     },
     {
-      name: "🍃应用净化",
+      name: "🍃净化拦截",
       type: "select",
       proxies: [
         "REJECT",
@@ -398,7 +355,7 @@ function main(config) {
       name: "🧊冷门节点",
       type: "select",
       "include-all": true,
-      filter: `^(?!.*${regexMainRegions.source})(?!.*${regexLowRate.source}).*$`
+      filter: `(?i)^(?!.*${regexMainRegions.source})(?!.*${regexLowRate.source}).*$`
     },
     {
       name: "🐢低倍率节点",
@@ -408,104 +365,99 @@ function main(config) {
     },
     
     // --- 自动测速池 ---
-    Object.assign({}, baseUT, { name: "♻️自动选择", "include-all": true, filter: `^(?!.*${regexLowRate.source}).*$` }),
-    Object.assign({}, baseUT, { name: "🇭🇰香港节点", "include-all": true, filter: `^(?=.*${regexRegions["香港"].source})(?!.*${regexLowRate.source}).*$` }),
-    Object.assign({}, baseUT, { name: "🇹🇼台湾节点", "include-all": true, filter: `^(?=.*${regexRegions["台湾"].source})(?!.*${regexLowRate.source}).*$` }),
-    Object.assign({}, baseUT, { name: "🇯🇵日本节点", "include-all": true, filter: `^(?=.*${regexRegions["日本"].source})(?!.*${regexLowRate.source}).*$` }),
-    Object.assign({}, baseUT, { name: "🇺🇸美国节点", "include-all": true, filter: `^(?=.*${regexRegions["美国"].source})(?!.*${regexLowRate.source}).*$` }),
-    Object.assign({}, baseUT, { name: "🇸🇬新加坡节点", "include-all": true, filter: `^(?=.*${regexRegions["新加坡"].source})(?!.*${regexLowRate.source}).*$` }),
-    Object.assign({}, baseUT, { name: "🇰🇷韩国节点", "include-all": true, filter: `^(?=.*${regexRegions["韩国"].source})(?!.*${regexLowRate.source}).*$` })
+    Object.assign({}, baseUT, { name: "♻️自动选择", "include-all": true, filter: `(?i)^(?!.*${regexLowRate.source}).*$` }),
+    Object.assign({}, baseUT, { name: "🇭🇰香港节点", "include-all": true, filter: `(?i)^(?=.*${regexRegions["香港"].source})(?!.*${regexLowRate.source}).*$` }),
+    Object.assign({}, baseUT, { name: "🇹🇼台湾节点", "include-all": true, filter: `(?i)^(?=.*${regexRegions["台湾"].source})(?!.*${regexLowRate.source}).*$` }),
+    Object.assign({}, baseUT, { name: "🇯🇵日本节点", "include-all": true, filter: `(?i)^(?=.*${regexRegions["日本"].source})(?!.*${regexLowRate.source}).*$` }),
+    Object.assign({}, baseUT, { name: "🇺🇸美国节点", "include-all": true, filter: `(?i)^(?=.*${regexRegions["美国"].source})(?!.*${regexLowRate.source}).*$` }),
+    Object.assign({}, baseUT, { name: "🇸🇬新加坡节点", "include-all": true, filter: `(?i)^(?=.*${regexRegions["新加坡"].source})(?!.*${regexLowRate.source}).*$` }),
+    Object.assign({}, baseUT, { name: "🇰🇷韩国节点", "include-all": true, filter: `(?i)^(?=.*${regexRegions["韩国"].source})(?!.*${regexLowRate.source}).*$` })
   ];
 
-  // ============================================================================
-  // 4. 规则提供者
-  // ============================================================================
-  const behaviorDN = { type: "http", behavior: "domain", format: "mrs", interval: 86400 };
-  const behaviorIP = { type: "http", behavior: "ipcidr", format: "mrs", interval: 86400 };
+  // ===========================================================================
+  // 4. 外部规则：AI、Crypto，以及 217heidai 的集成净化规则
+  // ===========================================================================
+  config["rule-providers"] = {
+    AI: {
+      type: "http",
+      behavior: "classical",
+      format: "yaml",
+      path: "./ruleset/ai-vpsdance.yaml",
+      url: "https://cdn.jsdelivr.net/gh/VPSDance/ai-proxy-rules@main/rules/clash/global.yaml",
+      interval: 86400
+    },
+    Crypto: {
+      type: "http",
+      behavior: "domain",
+      format: "mrs",
+      path: "./ruleset/crypto-666os.mrs",
+      url: "https://cdn.jsdelivr.net/gh/666OS/rules@release/mihomo/domain/Crypto.mrs",
+      interval: 86400
+    },
+    AdBlock: {
+      type: "http",
+      behavior: "domain",
+      format: "mrs",
+      path: "./ruleset/adblock-217heidai.mrs",
+      url: "https://cdn.jsdelivr.net/gh/217heidai/adblockfilters@main/rules/adblockmihomo.mrs",
+      interval: 86400
+    }
+  };
 
-  if (!config['rule-providers']) config['rule-providers'] = {};
+  config.rules = [
+    // 净化
+    "RULE-SET,AdBlock,🍃净化拦截",
+    // 按需阻断非中国大陆 UDP/443（主要是 QUIC）；取消下一行注释后启用
+    //"AND,((DST-PORT,443),(NETWORK,UDP),(NOT,((GEOIP,CN)))),🍃净化拦截",
 
-  Object.assign(config["rule-providers"], {
-    Tracking: Object.assign({}, behaviorDN, { url: "https://github.com/666OS/rules/raw/release/mihomo/domain/Tracking.mrs" }),
-    Advertising: Object.assign({}, behaviorDN, { url: "https://github.com/666OS/rules/raw/release/mihomo/domain/Advertising.mrs" }),
-    Direct: Object.assign({}, behaviorDN, { url: "https://github.com/666OS/rules/raw/release/mihomo/domain/Direct.mrs" }),
-    Private: Object.assign({}, behaviorDN, { url: "https://github.com/666OS/rules/raw/release/mihomo/domain/Private.mrs" }),
-    AI: Object.assign({}, behaviorDN, { url: "https://github.com/666OS/rules/raw/release/mihomo/domain/AI.mrs" }),
-    Telegram: Object.assign({}, behaviorDN, { url: "https://github.com/666OS/rules/raw/release/mihomo/domain/Telegram.mrs" }),
-    SocialMedia: Object.assign({}, behaviorDN, { url: "https://github.com/666OS/rules/raw/release/mihomo/domain/SocialMedia.mrs" }),
-    NewsMedia: Object.assign({}, behaviorDN, { url: "https://github.com/666OS/rules/raw/release/mihomo/domain/NewsMedia.mrs" }),
-    Games: Object.assign({}, behaviorDN, { url: "https://github.com/666OS/rules/raw/release/mihomo/domain/Games.mrs" }),
-    Crypto: Object.assign({}, behaviorDN, { url: "https://github.com/666OS/rules/raw/release/mihomo/domain/Crypto.mrs" }),
-    Spotify: Object.assign({}, behaviorDN, { url: "https://github.com/666OS/rules/raw/release/mihomo/domain/Spotify.mrs" }),
-    Netflix: Object.assign({}, behaviorDN, { url: "https://github.com/666OS/rules/raw/release/mihomo/domain/Netflix.mrs" }),
-    YouTube: Object.assign({}, behaviorDN, { url: "https://github.com/666OS/rules/raw/release/mihomo/domain/YouTube.mrs" }),
-    XPTV: Object.assign({}, behaviorDN, { url: "https://github.com/666OS/rules/raw/release/mihomo/domain/XPTV.mrs" }),
-    Emby: Object.assign({}, behaviorDN, { url: "https://github.com/666OS/rules/raw/release/mihomo/domain/Emby.mrs" }),
-    Streaming: Object.assign({}, behaviorDN, { url: "https://github.com/666OS/rules/raw/release/mihomo/domain/Streaming.mrs" }),
-    AppleCN: Object.assign({}, behaviorDN, { url: "https://github.com/666OS/rules/raw/release/mihomo/domain/AppleCN.mrs" }),
-    Apple: Object.assign({}, behaviorDN, { url: "https://github.com/666OS/rules/raw/release/mihomo/domain/Apple.mrs" }),
-    Google: Object.assign({}, behaviorDN, { url: "https://github.com/666OS/rules/raw/release/mihomo/domain/Google.mrs" }),
-    Microsoft: Object.assign({}, behaviorDN, { url: "https://github.com/666OS/rules/raw/release/mihomo/domain/Microsoft.mrs" }),
-    Proxy: Object.assign({}, behaviorDN, { url: "https://github.com/666OS/rules/raw/release/mihomo/domain/Proxy.mrs" }),
-    China: Object.assign({}, behaviorDN, { url: "https://github.com/666OS/rules/raw/release/mihomo/domain/China.mrs" }),
+    // 私有网络直连：精确规则，可前置
+    "GEOSITE,private,🎯全球直连",
+    "GEOIP,private,🎯全球直连,no-resolve",
 
-    AdvertisingIP: Object.assign({}, behaviorIP, { url: "https://github.com/666OS/rules/raw/release/mihomo/ip/Advertising.mrs" }),
-    PrivateIP: Object.assign({}, behaviorIP, { url: "https://github.com/666OS/rules/raw/release/mihomo/ip/Private.mrs" }),
-    AIIP: Object.assign({}, behaviorIP, { url: "https://github.com/666OS/rules/raw/release/mihomo/ip/AI.mrs" }),
-    TelegramIP: Object.assign({}, behaviorIP, { url: "https://github.com/666OS/rules/raw/release/mihomo/ip/Telegram.mrs" }),
-    SocialMediaIP: Object.assign({}, behaviorIP, { url: "https://github.com/666OS/rules/raw/release/mihomo/ip/SocialMedia.mrs" }),
-    XPTVIP: Object.assign({}, behaviorIP, { url: "https://github.com/666OS/rules/raw/release/mihomo/ip/XPTV.mrs" }),
-    EmbyIP: Object.assign({}, behaviorIP, { url: "https://github.com/666OS/rules/raw/release/mihomo/ip/Emby.mrs" }),
-    NetflixIP: Object.assign({}, behaviorIP, { url: "https://github.com/666OS/rules/raw/release/mihomo/ip/Netflix.mrs" }),
-    StreamingIP: Object.assign({}, behaviorIP, { url: "https://github.com/666OS/rules/raw/release/mihomo/ip/Streaming.mrs" }),
-    GoogleIP: Object.assign({}, behaviorIP, { url: "https://github.com/666OS/rules/raw/release/mihomo/ip/Google.mrs" }),
-    ProxyIP: Object.assign({}, behaviorIP, { url: "https://github.com/666OS/rules/raw/release/mihomo/ip/Proxy.mrs" }),
-    ChinaIP: Object.assign({}, behaviorIP, { url: "https://github.com/666OS/rules/raw/release/mihomo/ip/China.mrs" })
-  });
-
-  // ============================================================================
-  // 5. 路由规则注入
-  // ============================================================================
-  config["rules"] = [
-    "RULE-SET,Tracking,🍃应用净化",
-    "RULE-SET,Advertising,🍃应用净化",
-    //"AND,((DST-PORT,443),(NETWORK,UDP),(NOT,((GEOIP,CN)))),🍃应用净化",
-
-    "RULE-SET,Private,🎯全球直连",
-    "RULE-SET,Direct,🎯全球直连",
-    "RULE-SET,XPTV,🎯全球直连",
-    "RULE-SET,AppleCN,🎯全球直连",
-    "RULE-SET,AI,🤖人工智能",
+    // 人工智能：AI Provider 为 classical，内含域名、进程名，以及带 no-resolve 的 IP/ASN
     "DOMAIN-SUFFIX,openevidence.com,🤖人工智能",
+    "GEOSITE,apple-intelligence,🤖人工智能",
+    "RULE-SET,AI,🤖人工智能",
+
+    // Crypto
     "RULE-SET,Crypto,🪙Crypto",
-    "RULE-SET,Telegram,📲电报消息",
-    "RULE-SET,SocialMedia,📲社交平台",
-    "RULE-SET,Emby,🍿国际媒体",
-    "RULE-SET,Netflix,🎥奈飞视频",
-    "RULE-SET,Spotify,🎵Spotify",
-    "RULE-SET,YouTube,📺油管视频",
-    "RULE-SET,Streaming,🍿国际媒体",
-    "RULE-SET,Games,🎮游戏平台",
-    "RULE-SET,Google,🇬谷歌服务",
-    "RULE-SET,Microsoft,Ⓜ️微软服务",
-    "RULE-SET,Apple,🍎苹果服务",
-    "RULE-SET,NewsMedia,🚦节点选择",
-    "RULE-SET,Proxy,🚦节点选择",
-    "RULE-SET,China,🎯全球直连",
 
-    "RULE-SET,AdvertisingIP,🍃应用净化,no-resolve",
-    "RULE-SET,PrivateIP,🎯全球直连,no-resolve",
-    "RULE-SET,XPTVIP,🎯全球直连,no-resolve",
-    "RULE-SET,AIIP,🤖人工智能,no-resolve",
-    "RULE-SET,TelegramIP,📲电报消息,no-resolve",
-    "RULE-SET,SocialMediaIP,📲社交平台,no-resolve",
-    "RULE-SET,EmbyIP,🍿国际媒体,no-resolve",
-    "RULE-SET,NetflixIP,🎥奈飞视频,no-resolve",
-    "RULE-SET,StreamingIP,🍿国际媒体,no-resolve",
-    "RULE-SET,GoogleIP,🇬谷歌服务,no-resolve",
-    "RULE-SET,ProxyIP,🚦节点选择,no-resolve",
-    "RULE-SET,ChinaIP,🎯全球直连",
+    // 油管视频
+    "GEOSITE,youtube,📺油管视频",
 
+    // 社交平台
+    "GEOSITE,telegram,📲社交平台",
+    "GEOIP,telegram,📲社交平台,no-resolve",
+    "GEOSITE,category-social-media-!cn,📲社交平台",
+    "GEOSITE,category-communication,📲社交平台",
+    "GEOIP,facebook,📲社交平台,no-resolve",
+    "GEOIP,twitter,📲社交平台,no-resolve",
+
+    // 国际媒体
+    "GEOSITE,category-entertainment,🍿国际媒体",
+    "GEOIP,netflix,🍿国际媒体,no-resolve",
+
+    // 游戏平台（游戏服务、商店及游戏下载/更新）
+    "GEOSITE,category-game-platforms-download@cn,🎯全球直连",
+    "GEOSITE,category-games-!cn,🎮游戏平台",
+    "GEOSITE,category-game-platforms-download,🎮游戏平台",
+
+    // 谷歌服务
+    "GEOSITE,google,🇬谷歌服务",
+    "GEOIP,google,🇬谷歌服务,no-resolve",
+
+    // 微软服务
+    "GEOSITE,microsoft,Ⓜ️微软服务",
+
+    // 苹果服务
+    "GEOSITE,apple,🍎苹果服务",
+    "GEOIP,apple,🍎苹果服务,no-resolve",
+
+    // 中国大陆通用兜底：宽泛规则置于各专用业务规则之后
+    "GEOSITE,cn,🎯全球直连",
+    "GEOIP,CN,🎯全球直连,no-resolve",
+
+    // 漏网之鱼
     "MATCH,🐟漏网之鱼"
   ];
 
