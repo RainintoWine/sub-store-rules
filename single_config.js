@@ -274,6 +274,7 @@ function main(config) {
       name: "🍎苹果服务",
       type: "select",
       proxies: [
+        "🤖人工智能",
         "🎯全球直连",
         "🚦节点选择",
         "👆手动选择",
