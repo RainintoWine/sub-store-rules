@@ -448,9 +448,11 @@ function main(config) {
     "GEOIP,google,🇬谷歌服务,no-resolve",
 
     // 微软服务
+    "GEOSITE,microsoft@cn,🎯全球直连",
     "GEOSITE,microsoft,Ⓜ️微软服务",
 
     // 苹果服务
+    "GEOSITE,apple-cn,🎯全球直连",
     "GEOSITE,apple,🍎苹果服务",
     "GEOIP,apple,🍎苹果服务,no-resolve",
 
