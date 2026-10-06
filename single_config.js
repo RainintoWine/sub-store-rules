@@ -190,25 +190,6 @@ function main(config) {
       "include-all": true
     },
     {
-      name: "🇬谷歌服务",
-      type: "select",
-      proxies: [
-        "🤖人工智能",
-        "🚦节点选择",
-        "👆手动选择",
-        "♻️自动选择",
-        "🇯🇵日本节点",
-        "🇺🇸美国节点",
-        "🇭🇰香港节点",
-        "🇹🇼台湾节点",
-        "🇸🇬新加坡节点",
-        "🇰🇷韩国节点",
-        "🧊冷门节点",
-        "🐢低倍率节点",
-        "🎯全球直连"
-      ]
-    },
-    {
       name: "📺油管视频",
       type: "select",
       proxies: [
@@ -257,6 +238,25 @@ function main(config) {
         "🇸🇬新加坡节点",
         "🇰🇷韩国节点",
         "🧊冷门节点",
+      ]
+    },
+    {
+      name: "🇬谷歌服务",
+      type: "select",
+      proxies: [
+        "🤖人工智能",
+        "🚦节点选择",
+        "👆手动选择",
+        "♻️自动选择",
+        "🇯🇵日本节点",
+        "🇺🇸美国节点",
+        "🇭🇰香港节点",
+        "🇹🇼台湾节点",
+        "🇸🇬新加坡节点",
+        "🇰🇷韩国节点",
+        "🧊冷门节点",
+        "🐢低倍率节点",
+        "🎯全球直连"
       ]
     },
     {
@@ -363,12 +363,14 @@ function main(config) {
     {
       name: "🧊冷门节点",
       type: "select",
+      "empty-fallback": "REJECT",
       "include-all": true,
       filter: `(?i)^(?!.*${regexMainRegions.source})(?!.*${regexLowRate.source}).*$`
     },
     {
       name: "🐢低倍率节点",
       type: "select",
+      "empty-fallback": "REJECT",
       "include-all": true,
       filter: `(?i)${regexLowRate.source}`
     },
