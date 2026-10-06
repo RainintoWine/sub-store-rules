@@ -70,13 +70,38 @@ function main(config) {
     }
   };
   // ============================================================================
-  // 1.5 节点名称预处理 (清理冗余标记)
+  // 1.5 节点名称预处理（保留国旗，清理装饰 emoji）
   // ============================================================================
+  const decorativeEmoji = /(?:\p{Extended_Pictographic}(?:\uFE0F|\uFE0E)?(?:\u200D\p{Extended_Pictographic}(?:\uFE0F|\uFE0E)?)*|[0-9#*]\uFE0F?\u20E3)/gu;
   if (config.proxies && Array.isArray(config.proxies)) {
+    const nameTracker = new Map();
+    const renamedNodes = new Map();
+
+    config.proxies.forEach((p, index) => {
+      if (typeof p.name === "string") {
+        const originalName = p.name;
+        const baseName = p.name
+          .replace(decorativeEmoji, "")
+          .replace(/[\u{1F3FB}-\u{1F3FF}\uFE0E\uFE0F\u200D]/gu, "")
+          .replace(/\s{2,}/g, " ")
+          .trim() || `节点 ${index + 1}`;
+
+        let suffix = nameTracker.get(baseName) || 1;
+        let uniqueName = baseName;
+        while (renamedNodes.has(uniqueName)) {
+          suffix += 1;
+          uniqueName = `${baseName} #${suffix}`;
+        }
+        nameTracker.set(baseName, suffix);
+        renamedNodes.set(uniqueName, uniqueName);
+        renamedNodes.set(originalName, uniqueName);
+        p.name = uniqueName;
+      }
+    });
+
     config.proxies.forEach(p => {
-      if (p.name) {
-        // 主动删除节点名中可能带有的🔋和🪫标记
-        p.name = p.name.replace(/[🔋🪫]/g, "");
+      if (typeof p["dialer-proxy"] === "string" && renamedNodes.has(p["dialer-proxy"])) {
+        p["dialer-proxy"] = renamedNodes.get(p["dialer-proxy"]);
       }
     });
   }
@@ -84,7 +109,12 @@ function main(config) {
   // ============================================================================
   // 2. 高性能正则匹配引擎
   // ============================================================================
-  const regexLowRate = /(?:0\.[0-8](?:[xX]|倍)|[xX]0\.[0-8]|低倍率|省流|实验性|免费|test|beta)/iu;
+  // 识别 0～0.8 倍的任意小数精度，例如 0.25x、x0.25、0.800 倍；不匹配 0.81x、10.5x。
+  const lowRateMultiplier = String.raw`0(?:\.(?:[0-7]\d*|80*))?`;
+  const regexLowRate = new RegExp(
+    String.raw`(?:(?<![\d.])${lowRateMultiplier}\s*(?:[xX×]|倍)(?![\d.])|(?<![\d.])(?:[xX×])\s*${lowRateMultiplier}(?![\d.])|低倍率|省流|实验性|免费|test|beta)`,
+    "iu"
+  );
 
   const regionData = {
     "香港": { emoji: "🇭🇰", keywords: ["香港", "港", "(?:深|沪|呼|京|广|杭)港", "(?<![a-zA-Z])HK(?![a-zA-Z])", "Hong(?:Kong)?", "HKG"] },
