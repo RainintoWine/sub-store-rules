@@ -482,6 +482,14 @@ function main(config) {
     "GEOSITE,private,DIRECT",
     "GEOIP,private,DIRECT,no-resolve",
 
+    // IP 检测网站统一走 AI 组
+    "DOMAIN-SUFFIX,ipforai.cc,🤖人工智能",
+    "DOMAIN-SUFFIX,ipjudge.org,🤖人工智能",
+    "DOMAIN-SUFFIX,ipure.dev,🤖人工智能",
+    "DOMAIN-SUFFIX,ping0.cc,🤖人工智能",
+    "DOMAIN-SUFFIX,ippure.com,🤖人工智能",
+    "DOMAIN-SUFFIX,cleanip.io,🤖人工智能",
+
     // 人工智能优先
     "DOMAIN-SUFFIX,openevidence.com,🤖人工智能",
     "RULE-SET,AI,🤖人工智能,no-resolve",
