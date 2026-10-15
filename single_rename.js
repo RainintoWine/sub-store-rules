@@ -198,7 +198,7 @@ function operator(proxies) {
         }
         pureName = pureName.replace(/\s+/g, " ").trim();
         if (!pureName && !flag) pureName = "节点 " + (index + 1);
-        const baseName = [quality, flag, pureName].filter(Boolean).join(" ");
+        const baseName = quality + [flag, pureName].filter(Boolean).join(" ");
         let count = nameCounts.get(baseName) || 0;
         let uniqueName = baseName + (count ? "#" + count : "") + suffix;
         while (usedNames.has(uniqueName)) uniqueName = baseName + "#" + ++count + suffix;
