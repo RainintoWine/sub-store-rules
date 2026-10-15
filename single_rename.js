@@ -7,7 +7,7 @@
 // ==========================================
 // ⚙️ 1. 用户配置区 
 // ==========================================
-// 1. 全局基础档次 H -> ▶、L -> ▷；节点倍率与特征可覆盖，force 最终优先。
+// 1. 全局基础档次 H -> ⬢、L -> ⬡；节点倍率与特征可覆盖，force 最终优先。
 function readArgument(key) {
     const args = typeof $arguments !== "undefined" && $arguments ? $arguments : {};
     const actualKey = Object.prototype.hasOwnProperty.call(args, key)
@@ -18,7 +18,7 @@ function readArgument(key) {
     try { return decodeURIComponent(text); } catch { return text; }
 }
 const rawTag = readArgument("tag").trim().toUpperCase() || "L";
-const tagMap = { H: "▶", L: "▷" };
+const tagMap = { H: "⬢", L: "⬡" };
 const QUALITY_TAG = tagMap[rawTag] || tagMap.L;
 
 // 2. 机场名称后缀
@@ -185,7 +185,7 @@ function operator(proxies) {
         // 清除装饰和旧标记；判定仍使用清理前的主体。
         body = body.replace(emojiRegex, emoji => keepEmoji.test(emoji) ? emoji : "")
             .replace(/[\u{1F3FB}-\u{1F3FF}\u200D]/gu, "");
-        body = body.replace(/^(?:\s*[▶▷])+\s*/u, "");
+        body = body.replace(/^(?:\s*[⬢⬡])+\s*/u, "");
 
         const quality = classifyQuality(sourceName);
         let pureName = body.replace(flagRegex, "");
