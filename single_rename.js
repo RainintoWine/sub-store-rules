@@ -1,6 +1,8 @@
+// 更新：2026-10-15 23:03（UTC+8）；可配置倍率阈值，多倍率按最小值判断。
 /**
  * 节点打标与重命名：保留来源档次、倍率、线路与完整机场后缀。
  * tag=H/L、name、forceH、forceL；空 tag 默认 L，空 name 无后缀。
+ * highRate/lowRate：倍率 >= highRate 升级，<= lowRate 降级；参数名忽略大小写。
  * 原始订阅先识别/force，后清理名称；旧质量标记清除后重新判定。
  */
 
@@ -24,7 +26,23 @@ const QUALITY_TAG = tagMap[rawTag] || tagMap.L;
 // 2. 机场名称后缀
 const AIRPORT_NAME = readArgument("name");
 
-// 3. 倍率按数值比较：>1 升级，<1 降级，=1 沿用基础档次。
+// 3. 不填阈值时沿用 >1 升级、<1 降级；填写后包含边界。
+function readRate(key) {
+    const text = readArgument(key).trim();
+    if (!text) return null;
+    const value = Number(text);
+    if (!Number.isFinite(value) || value < 0) throw new Error(key + " 必须是有限的非负数值");
+    return value;
+}
+const highRate = readRate("highRate");
+const lowRate = readRate("lowRate");
+const highBoundary = highRate === null ? 1 : highRate;
+const lowBoundary = lowRate === null ? 1 : lowRate;
+if (lowBoundary > highBoundary ||
+    (lowBoundary === highBoundary && highRate !== null && lowRate !== null)) {
+    throw new Error("highRate 与 lowRate 的判定区间不能重叠");
+}
+
 // 接受中文紧邻倍率，拒绝英文单词、数字和小数内部的局部命中。
 const multiplierRegex = /(?<![a-zA-Z\d.])(?:(\d+(?:\.\d+)?)\s*(?:[x×倍])(?![a-zA-Z\d.])|[x×]\s*(\d+(?:\.\d+)?)(?![a-zA-Z\d.]))/giu;
 // 保留原版低档关键词；只移除计费数字的一位小数限制。
@@ -153,12 +171,13 @@ function classifyQuality(name) {
     if (forceHList.some(keyword => upperName.includes(keyword))) return tagMap.H;
     if (forceLList.some(keyword => upperName.includes(keyword))) return tagMap.L;
     if (lowQualityKeywords.test(name)) return tagMap.L;
-    const multipliers = [...new Set([...name.matchAll(multiplierRegex)]
-        .map(match => Number(match[1] || match[2])))];
-    // 名称含不同倍率时沿用基础档次，避免任选一个数字。
-    if (multipliers.length > 1) return QUALITY_TAG;
-    if (multipliers.length === 1 && multipliers[0] < 1) return tagMap.L;
-    if (multipliers.length === 1 && multipliers[0] > 1) return tagMap.H;
+    const multipliers = [...name.matchAll(multiplierRegex)]
+        .map(match => Number(match[1] || match[2]));
+    if (multipliers.length) {
+        const rate = Math.min(...multipliers);
+        if (lowRate === null ? rate < 1 : rate <= lowRate) return tagMap.L;
+        if (highRate === null ? rate > 1 : rate >= highRate) return tagMap.H;
+    }
     if (highQualityKeywords.test(name)) return tagMap.H;
     return QUALITY_TAG;
 }
