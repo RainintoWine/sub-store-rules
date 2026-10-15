@@ -1,4 +1,4 @@
-// 更新：2026-10-15 14:32（UTC+8）；总自动复用地区组测速，并纳入同质量冷门原始节点。
+// 更新：2026-10-15 15:13（UTC+8）；按质量、地区共享测速池，总自动展开比较原始节点。
 function main(config) {
   // ============================================================================
   // 1. 核心系统参数注入
@@ -137,10 +137,6 @@ function main(config) {
     regexRegions[region] = new RegExp(`^(?:${regionPrefix}${data.emoji}|(?!${regionPrefix}${standardFlagPattern})(?=[^#]*(?:${data.keywords.join('|')})))`, 'iu');
   }
 
-  const allEmojis = Object.values(regionData).map(d => d.emoji);
-  const allKeywords = Object.values(regionData).flatMap(d => d.keywords);
-  const regexMainRegions = new RegExp(`^(?:${regionPrefix}(?:${allEmojis.join('|')})|(?!${regionPrefix}${standardFlagPattern})(?=[^#]*(?:${allKeywords.join('|')})))`, 'iu');
-
   // ============================================================================
   // 3. 策略组装 (竖排易编辑排版)
   // ============================================================================
@@ -186,23 +182,46 @@ function main(config) {
   const highAllPools = [high.auto, ...highRegionalPools];
   const lowAllPools = [low.auto, ...lowRegionalPools];
   const allQualityPools = [...highAllPools, ...lowAllPools];
-  const select = (name, proxies, extra = {}) => ({
-    ...probe,
-    name,
-    type: "select",
-    ...(proxies ? { proxies } : {}),
-    ...extra
-  });
-  const qualityFilter = (quality, region) =>
-    "(?i)(?=" + (region || regexMainRegions).source + ")" + quality.source + ".*$";
-  const coldFilter = quality =>
-    "(?i)(?!" + regexMainRegions.source + ")" + quality.source + ".*$";
-  const autoPool = (name, quality, region) =>
-    Object.assign({}, baseUT, {
-      name,
-      "include-all": true,
-      filter: qualityFilter(quality, region)
-    });
+  const nodes = config.proxies || [];
+  const membersByGroup = new Map();
+  for (const node of nodes) {
+    const quality = regexHighQuality.test(node.name) ? high : regexLowQuality.test(node.name) ? low : null;
+    const region = quality && Object.keys(regexRegions).find(region => regexRegions[region].test(node.name));
+    const name = quality ? region ? node.name[0] + regionData[region].emoji + region + "节点" : quality.cold : "未标记节点";
+    if (!membersByGroup.has(name)) membersByGroup.set(name, []);
+    membersByGroup.get(name).push(node);
+  }
+  config["proxy-providers"] = { ...config["proxy-providers"] };
+  const poolNames = new Map();
+  for (const [group, payload] of membersByGroup) {
+    const name = "节点池/" + group;
+    if (name in config["proxy-providers"]) throw new Error("节点池名称冲突：" + name);
+    config["proxy-providers"][name] = {
+      type: "inline", payload,
+      "health-check": {
+        ...probe, enable: group !== "未标记节点",
+        interval: baseUT.interval, lazy: baseUT.lazy
+      }
+    };
+    poolNames.set(group, name);
+  }
+  // 被 dialer-proxy 引用的节点仍保留全局名称，避免迁移节点池后链式连接失效。
+  const dialerTargets = new Set(nodes.map(node => node["dialer-proxy"]));
+  config.proxies = nodes.filter(node => dialerTargets.has(node.name));
+  const poolRefs = groups => {
+    const use = groups.map(group => poolNames.get(group)).filter(Boolean);
+    return use.length ? { use } : { proxies: ["REJECT"] };
+  };
+  const select = (name, proxies, extra = {}) => {
+    const group = { ...probe, name, type: "select", ...(proxies ? { proxies } : {}), ...extra };
+    if (group["include-all"]) {
+      delete group["include-all"];
+      group.use = Object.keys(config["proxy-providers"]);
+      if (!group.use.length && !group.proxies) group.proxies = ["REJECT"];
+    }
+    return group;
+  };
+  const autoPool = (name, groups = [name]) => ({ ...baseUT, name, ...poolRefs(groups) });
 
   config["proxy-groups"] = [
     // 业务面板顺序与单分组保持一致。
@@ -241,13 +260,11 @@ function main(config) {
     // 没有成员时返回 REJECT，避免空分组显示为可测速的 COMPATIBLE。
     select(high.cold, null, {
       "empty-fallback": "REJECT",
-      "include-all": true,
-      filter: coldFilter(regexHighQuality)
+      ...poolRefs([high.cold])
     }),
     select(low.cold, null, {
       "empty-fallback": "REJECT",
-      "include-all": true,
-      filter: coldFilter(regexLowQuality)
+      ...poolRefs([low.cold])
     }),
 
     select("🎯全球直连", ["DIRECT", "👆手动选择", ...highAllPools, ...lowAllPools]),
@@ -255,25 +272,13 @@ function main(config) {
     select("🍃净化拦截", ["REJECT", "DIRECT"]),
 
     // 所有 url-test 均继承单分组的 baseUT。
-    // 地区组检测常见节点；总自动只检测地区出口及冷门原始节点。
-    { ...baseUT, name: high.auto,
-      proxies: [high.hk, high.tw, high.jp, high.us, high.sg, high.kr],
-      "include-all": true, filter: coldFilter(regexHighQuality) },
-    autoPool(high.hk, regexHighQuality, regexRegions["香港"]),
-    autoPool(high.tw, regexHighQuality, regexRegions["台湾"]),
-    autoPool(high.jp, regexHighQuality, regexRegions["日本"]),
-    autoPool(high.us, regexHighQuality, regexRegions["美国"]),
-    autoPool(high.sg, regexHighQuality, regexRegions["新加坡"]),
-    autoPool(high.kr, regexHighQuality, regexRegions["韩国"]),
-    { ...baseUT, name: low.auto,
-      proxies: [low.hk, low.tw, low.jp, low.us, low.sg, low.kr],
-      "include-all": true, filter: coldFilter(regexLowQuality) },
-    autoPool(low.hk, regexLowQuality, regexRegions["香港"]),
-    autoPool(low.tw, regexLowQuality, regexRegions["台湾"]),
-    autoPool(low.jp, regexLowQuality, regexRegions["日本"]),
-    autoPool(low.us, regexLowQuality, regexRegions["美国"]),
-    autoPool(low.sg, regexLowQuality, regexRegions["新加坡"]),
-    autoPool(low.kr, regexLowQuality, regexRegions["韩国"])
+    // 各组引用同一批节点池，共享测速记录，独立选优。
+    autoPool(high.auto, highRegionalPools),
+    autoPool(high.hk), autoPool(high.tw), autoPool(high.jp),
+    autoPool(high.us), autoPool(high.sg), autoPool(high.kr),
+    autoPool(low.auto, lowRegionalPools),
+    autoPool(low.hk), autoPool(low.tw), autoPool(low.jp),
+    autoPool(low.us), autoPool(low.sg), autoPool(low.kr)
   ];
   // ============================================================================
   config["geodata-mode"] = false;
