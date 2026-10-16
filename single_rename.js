@@ -1,4 +1,4 @@
-// 更新：2026-10-15 23:03（UTC+8）；可配置倍率阈值，多倍率按最小值判断。
+// 更新：2026-10-16（UTC+8）；初始化时清除全部旧质量标记，保留原名用于判定。
 /**
  * 节点打标与重命名：保留来源档次、倍率、线路与完整机场后缀。
  * tag=H/L、name、forceH、forceL；空 tag 默认 L，空 name 无后缀。
@@ -199,12 +199,12 @@ function operator(proxies) {
             body = body.slice(0, -suffix.length);
         }
         const sourceName = body;
+        body = body.replace(/[⬢⬡]/gu, "");
         const regionIndex = identifyRegion(sourceName);
         const flag = FG[regionIndex] || "";
         // 清除装饰和旧标记；判定仍使用清理前的主体。
         body = body.replace(emojiRegex, emoji => keepEmoji.test(emoji) ? emoji : "")
             .replace(/[\u{1F3FB}-\u{1F3FF}\u200D]/gu, "");
-        body = body.replace(/^(?:\s*[⬢⬡])+\s*/u, "");
 
         const quality = classifyQuality(sourceName);
         let pureName = body.replace(flagRegex, "");
