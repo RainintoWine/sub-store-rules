@@ -1,8 +1,9 @@
-// 更新：2026-10-16（UTC+8）；初始化时清除全部旧质量标记，保留原名用于判定。
+// 更新：2026-10-23（UTC+8）；新增 del 参数，按原始节点名删除匹配节点。
 /**
  * 节点打标与重命名：保留来源档次、倍率、线路与完整机场后缀。
  * tag=H/L、name、forceH、forceL；空 tag 默认 L，空 name 无后缀。
  * highRate/lowRate：倍率 >= highRate 升级，<= lowRate 降级；参数名忽略大小写。
+ * del：按原始节点名包含匹配删除；忽略大小写，支持英文逗号、中文逗号、顿号，留空不删除。
  * 原始订阅先识别/force，后清理名称；旧质量标记清除后重新判定。
  */
 
@@ -25,6 +26,7 @@ const QUALITY_TAG = tagMap[rawTag] || tagMap.L;
 
 // 2. 机场名称后缀
 const AIRPORT_NAME = readArgument("name");
+const delList = readArgument("del").split(/[,，、]/).map(s => s.trim().toUpperCase()).filter(Boolean);
 
 // 3. 不填阈值时沿用 >1 升级、<1 降级；填写后包含边界。
 function readRate(key) {
@@ -183,6 +185,14 @@ function classifyQuality(name) {
 }
 
 function operator(proxies) {
+    if (delList.length) {
+        const removed = new Set(proxies.filter(p => typeof p.name === "string" &&
+            delList.some(keyword => p.name.toUpperCase().includes(keyword))).map(p => p.name));
+        proxies = proxies.filter(p => !removed.has(p.name));
+        for (const p of proxies) {
+            if (removed.has(p["dialer-proxy"])) throw new Error("del 删除了仍被节点引用的 dialer-proxy：" + p["dialer-proxy"]);
+        }
+    }
     const flagRegex = /[\u{1F1E6}-\u{1F1FF}]{2}/gu;
     const emojiRegex = /\p{Extended_Pictographic}[\uFE0E\uFE0F]?|[0-9#*]\uFE0F?\u20E3/gu;
     const keepEmoji = /^(?:[0-9]\uFE0F?\u20E3|[Ⓜ\u{1F130}-\u{1F149}\u{1F170}-\u{1F189}][\uFE0E\uFE0F]?)$/u;
