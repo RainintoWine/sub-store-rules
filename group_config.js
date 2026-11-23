@@ -1,4 +1,4 @@
-// 更新：2026-10-15 15:13（UTC+8）；按质量、地区共享测速池，总自动展开比较原始节点。
+// 更新：2026-11-23 17:03（UTC+8）；补充 Tailscale 通用 fake-ip 排除与 CGNAT/ULA 规则级兜底直连。
 function main(config) {
   // ============================================================================
   // 1. 核心系统参数注入
@@ -52,7 +52,8 @@ function main(config) {
       "+.stun.*",
       "+.stun.*.*",
       "stun.*.*",
-      "+.push.apple.com"
+      "+.push.apple.com",
+      "+.ts.net"
     ],
     "nameserver": [
       "https://1.1.1.1/dns-query#🚦节点选择",
@@ -344,6 +345,9 @@ function main(config) {
     // 私有网络固定直连
     "GEOSITE,private,DIRECT",
     "GEOIP,private,DIRECT,no-resolve",
+    // Tailscale CGNAT 与内网 IPv6 兜底直连（不依赖 GeoIP 数据库；安卓内嵌 Tailscale 脚本会在规则顶部优先拦截）
+    "IP-CIDR,100.64.0.0/10,DIRECT,no-resolve",
+    "IP-CIDR6,fd7a:115c:a1e0::/48,DIRECT,no-resolve",
     
     // IP 检测网站统一走 AI 组
     "DOMAIN-SUFFIX,ipforai.cc,🤖人工智能",
