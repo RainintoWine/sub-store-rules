@@ -1,4 +1,4 @@
-// 更新：2026-11-23 22:22（UTC+8）；完善 Tailscale 原生端 MagicDNS/TUN/直连出口，并新增 🚰Tailscale 控制面与 DERP 分流组。
+// 更新：2026-11-23 22:22（UTC+8）；完善 Tailscale 原生端 MagicDNS/TUN/直连出口，并新增 🚇Tailscale 控制面与 DERP 分流组。
 function main(config) {
   // ============================================================================
   // 1. 核心系统参数注入
@@ -377,7 +377,7 @@ function main(config) {
     select("Ⓜ️微软服务", ["🤖人工智能", "🚦节点选择", "👆手动选择", "🎯全球直连", ...allChoices]),
     select("🍎苹果服务", ["🤖人工智能", "🎯全球直连", "🚦节点选择", "👆手动选择", ...allChoices]),
     select("🎮游戏平台", ["🎯全球直连", "🚦节点选择", "👆手动选择", ...allChoices]),
-    select("🚰Tailscale", [
+    select("🚇Tailscale", [
       "🇭🇰香港节点", "DIRECT", "🇯🇵日本节点", "🇸🇬新加坡节点",
       "🚦节点选择", "👆手动选择", "🎯全球直连",
       "♻️自动选择", "🇹🇼台湾节点", "🇺🇸美国节点", "🇰🇷韩国节点",
@@ -464,8 +464,8 @@ function main(config) {
     "IP-CIDR,100.64.0.0/10,Tailscale-Direct,no-resolve",
     "IP-CIDR6,fd7a:115c:a1e0::/48,Tailscale-Direct,no-resolve",
     // Tailscale 控制面与 DERP 中继独立分流，与日常代理地区解耦
-    "DOMAIN-SUFFIX,tailscale.com,🚰Tailscale",
-    "DOMAIN-SUFFIX,tailscale.io,🚰Tailscale",
+    "DOMAIN-SUFFIX,tailscale.com,🚇Tailscale",
+    "DOMAIN-SUFFIX,tailscale.io,🚇Tailscale",
     
     // IP 检测网站统一走 AI 组
     "DOMAIN-SUFFIX,ipforai.cc,🤖人工智能",
