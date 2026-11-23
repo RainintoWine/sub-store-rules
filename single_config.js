@@ -1,4 +1,4 @@
-// 更新：2026-11-23 17:03（UTC+8）；补充 Tailscale 通用 fake-ip 排除与 CGNAT/ULA 规则级兜底直连。
+// 更新：2026-11-23 22:22（UTC+8）；完善 Tailscale 原生端 MagicDNS/TUN/直连出口，并新增 🛡️Tailscale 控制面与 DERP 分流组。
 function main(config) {
   // ============================================================================
   // 1. 核心系统参数注入
@@ -17,12 +17,19 @@ function main(config) {
     "store-fake-ip": true
   };
 
-  // 保留客户端的 TUN 开关、协议栈与严格路由设置。
+  // 保留客户端的 TUN 开关、协议栈与严格路由设置；排除 Tailscale 网段避免原生端 TUN 劫持。
   config["tun"] = {
     ...config["tun"],
     "auto-route": true,
     "auto-detect-interface": true,
-    "dns-hijack": ["any:53", "tcp://any:53"]
+    "dns-hijack": ["any:53", "tcp://any:53"],
+    "route-exclude-address": [
+      ...new Set([
+        ...(config["tun"]?.["route-exclude-address"] ?? []),
+        "100.64.0.0/10",
+        "fd7a:115c:a1e0::/48"
+      ])
+    ]
   };
 
   config["sniffer"] = {
@@ -65,6 +72,11 @@ function main(config) {
     ],
     "nameserver-policy": {
       "geosite:private": "system",
+      "+.ts.net": [
+        "100.100.100.100#Tailscale",
+        "100.100.100.100#tailscale0",
+        "100.100.100.100#DIRECT"
+      ],
       "+.bing.com": [
         "https://1.1.1.1/dns-query#🚦节点选择",
         "https://8.8.8.8/dns-query#🚦节点选择"
@@ -330,7 +342,11 @@ function main(config) {
   }
   // 被链式连接引用的节点保留全局名称。
   const dialerTargets = new Set(nodes.map(node => node["dialer-proxy"]));
-  config.proxies = nodes.filter(node => dialerTargets.has(node.name));
+  config.proxies = [
+    ...nodes.filter(node => dialerTargets.has(node.name) && node.name !== "Tailscale-Direct"),
+    // 原生 Tailscale 端直连出口，绕开 auto-detect-interface 对物理网卡的绑定。
+    { name: "Tailscale-Direct", type: "direct", "interface-name": "Tailscale", udp: true }
+  ];
   const poolRefs = use => use.length ? { use } : { proxies: ["REJECT"] };
   const select = (name, proxies, extra = {}) => {
     const group = { ...probe, name, type: "select", ...(proxies ? { proxies } : {}), ...extra };
@@ -361,6 +377,12 @@ function main(config) {
     select("Ⓜ️微软服务", ["🤖人工智能", "🚦节点选择", "👆手动选择", "🎯全球直连", ...allChoices]),
     select("🍎苹果服务", ["🤖人工智能", "🎯全球直连", "🚦节点选择", "👆手动选择", ...allChoices]),
     select("🎮游戏平台", ["🎯全球直连", "🚦节点选择", "👆手动选择", ...allChoices]),
+    select("🛡️Tailscale", [
+      "🇭🇰香港节点", "🇯🇵日本节点", "🇸🇬新加坡节点",
+      "🚦节点选择", "👆手动选择", "🎯全球直连",
+      "♻️自动选择", "🇹🇼台湾节点", "🇺🇸美国节点", "🇰🇷韩国节点",
+      preferred, cold
+    ]),
     select(preferred, null, { "empty-fallback": "REJECT", ...poolRefs(preferredPools) }),
     select(cold, null, { "empty-fallback": "REJECT", ...poolRefs(poolsByRegion.get(cold)) }),
     select("🎯全球直连", ["DIRECT", "👆手动选择", ...allChoices]),
@@ -437,9 +459,13 @@ function main(config) {
     // 私有网络固定直连
     "GEOSITE,private,DIRECT",
     "GEOIP,private,DIRECT,no-resolve",
-    // Tailscale CGNAT 与内网 IPv6 兜底直连（不依赖 GeoIP 数据库；安卓内嵌 Tailscale 脚本会在规则顶部优先拦截）
-    "IP-CIDR,100.64.0.0/10,DIRECT,no-resolve",
-    "IP-CIDR6,fd7a:115c:a1e0::/48,DIRECT,no-resolve",
+    // Tailscale 尾网域名与 CGNAT/ULA 网段直连（走 Tailscale 虚拟网卡；内嵌端由 tailscale_embed.js 覆盖）
+    "DOMAIN-SUFFIX,ts.net,Tailscale-Direct",
+    "IP-CIDR,100.64.0.0/10,Tailscale-Direct,no-resolve",
+    "IP-CIDR6,fd7a:115c:a1e0::/48,Tailscale-Direct,no-resolve",
+    // Tailscale 控制面与 DERP 中继独立分流，与日常代理地区解耦
+    "DOMAIN-SUFFIX,tailscale.com,🛡️Tailscale",
+    "DOMAIN-SUFFIX,tailscale.io,🛡️Tailscale",
     
     // IP 检测网站统一走 AI 组
     "DOMAIN-SUFFIX,ipforai.cc,🤖人工智能",
