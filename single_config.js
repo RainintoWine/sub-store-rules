@@ -1,4 +1,4 @@
-// 更新：2026-11-23 22:22（UTC+8）；完善 Tailscale 原生端 MagicDNS/TUN/直连出口，并新增 🚇Tailscale 控制面与 DERP 分流组。
+// 更新：2026-11-27 00:57（UTC+8）；补齐 OpenBot AI 分流，并让全局模式 GLOBAL 可选择全部 provider 节点与策略组。
 function main(config) {
   // ============================================================================
   // 1. 核心系统参数注入
@@ -358,7 +358,7 @@ function main(config) {
     return group;
   };
 
-  config["proxy-groups"] = [
+  const groups = [
     select("🚦节点选择", [...allChoices, "👆手动选择"], { "include-all": true }),
     select("👆手动选择", [...regionalChoices, preferred, cold], { "include-all": true }),
     select("🤖人工智能", [
@@ -392,6 +392,11 @@ function main(config) {
     // 总自动直接展开全部原始节点；地区组使用各自池，不嵌套地区出口。
     { ...baseUT, name: "♻️自动选择", ...poolRefs([...membersByPool.keys()]) },
     ...regionGroups.map(name => ({ ...baseUT, name, ...poolRefs(poolsByRegion.get(name)) }))
+  ];
+  // 内置 GLOBAL 不会展开 proxy-providers；自定义时同时保留全部策略组和全部节点。
+  config["proxy-groups"] = [
+    select("GLOBAL", groups.map(group => group.name), { "include-all": true }),
+    ...groups
   ];
   // ============================================================================
   // 4. BETT 整库与外部规则
@@ -477,6 +482,7 @@ function main(config) {
     
     // 人工智能优先
     "DOMAIN-SUFFIX,openevidence.com,🤖人工智能",
+    "DOMAIN-SUFFIX,openbot.run,🤖人工智能",
     "RULE-SET,AI,🤖人工智能,no-resolve",
     "GEOSITE,apple-intelligence,🤖人工智能",
 

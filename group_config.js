@@ -1,4 +1,4 @@
-// 更新：2026-11-23 22:22（UTC+8）；完善 Tailscale 原生端 MagicDNS/TUN/直连出口，并新增 🚇Tailscale 控制面与 DERP 分流组。
+// 更新：2026-11-27 00:57（UTC+8）；补齐 OpenBot AI 分流，并让全局模式 GLOBAL 可选择全部 provider 节点与策略组。
 function main(config) {
   // ============================================================================
   // 1. 核心系统参数注入
@@ -240,7 +240,7 @@ function main(config) {
   };
   const autoPool = (name, groups = [name]) => ({ ...baseUT, name, ...poolRefs(groups) });
 
-  config["proxy-groups"] = [
+  const groups = [
     // 业务面板顺序与单分组保持一致。
     select("🚦节点选择", [...highAllPools, "👆手动选择", ...lowAllPools], { "include-all": true }),
     select("👆手动选择", [...highRegionalPools, ...lowRegionalPools], { "include-all": true }),
@@ -300,6 +300,11 @@ function main(config) {
     autoPool(low.auto, lowRegionalPools),
     autoPool(low.hk), autoPool(low.tw), autoPool(low.jp),
     autoPool(low.us), autoPool(low.sg), autoPool(low.kr)
+  ];
+  // 内置 GLOBAL 不会展开 proxy-providers；自定义时同时保留全部策略组和全部节点。
+  config["proxy-groups"] = [
+    select("GLOBAL", groups.map(group => group.name), { "include-all": true }),
+    ...groups
   ];
   // ============================================================================
   config["geodata-mode"] = false;
@@ -383,6 +388,7 @@ function main(config) {
     
     // 人工智能优先
     "DOMAIN-SUFFIX,openevidence.com,🤖人工智能",
+    "DOMAIN-SUFFIX,openbot.run,🤖人工智能",
     "RULE-SET,AI,🤖人工智能,no-resolve",
     "GEOSITE,apple-intelligence,🤖人工智能",
 
